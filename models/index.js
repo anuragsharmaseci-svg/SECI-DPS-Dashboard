@@ -95,7 +95,16 @@ const models = {
   StateWiseDetail: require("./state_wise_details")(sequelize, DataTypes),
   DiscomPayments: require("./discom_payment")(sequelize, DataTypes),
   OwnProject: require("./own_project")(sequelize, DataTypes),
+  QaRegisteredProject: require("./qa_registered_project")(sequelize, DataTypes),
+  QaBbu: require("./qa_bbu")(sequelize, DataTypes),
+  QaMdcc: require("./qa_mdcc")(sequelize, DataTypes),
 };
+
+// QA associations
+models.QaRegisteredProject.hasMany(models.QaBbu, { as: "bbus", foreignKey: "qa_project_id" });
+models.QaRegisteredProject.hasMany(models.QaMdcc, { as: "mdccs", foreignKey: "qa_project_id" });
+models.QaBbu.belongsTo(models.QaRegisteredProject, { as: "project", foreignKey: "qa_project_id" });
+models.QaMdcc.belongsTo(models.QaRegisteredProject, { as: "project", foreignKey: "qa_project_id" });
 
 Object.values(models).forEach((model) => {
   if (typeof model.associate === "function") {

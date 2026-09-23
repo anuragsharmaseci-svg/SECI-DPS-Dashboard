@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add MDCC Entry - QA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="./js/auth_guard.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #f4f6f9 0%, #e8ecf1 100%);
+      padding: 20px; min-height: 100vh; color: #333;
+    }
+    h1 { text-align: center; margin-bottom: 10px; color: #0b5ed7; font-weight: 700; font-size: 28px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+    .form-container {
+      max-width: 1000px; margin: auto; background: #ffffff;
+      padding: 30px 35px; border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .project-info {
+      background: #e7f1ff; border: 1px solid #b6d4fe;
+      border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;
+    }
+    .project-info strong { color: #0b5ed7; }
+    .form-section {
+      grid-column: span 2; margin-top: 10px; margin-bottom: 5px;
+      padding-bottom: 8px; border-bottom: 2px solid #0b5ed7;
+      color: #0b5ed7; font-weight: 600; font-size: 18px;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 8px; display: flex; align-items: center; }
+    .required::after { content: " *"; color: #dc3545; }
+    input, textarea, select {
+      width: 100%; padding: 12px; font-size: 15px;
+      border: 1px solid #cfd4da; border-radius: 6px;
+      transition: all 0.3s; font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #0b5ed7; box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.15); }
+    textarea { resize: vertical; min-height: 80px; }
+    .full-width { grid-column: span 2; }
+    .btn-group { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+    button, .btn-back {
+      padding: 12px 32px; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: all 0.3s; min-width: 140px;
+      text-decoration: none; display: inline-block; text-align: center;
+    }
+    .btn-submit {
+      background: linear-gradient(to right, #0b5ed7, #0a58ca);
+      color: #fff; box-shadow: 0 4px 6px rgba(11, 94, 215, 0.2);
+    }
+    .btn-submit:hover { background: linear-gradient(to right, #0a58ca, #0950b8); box-shadow: 0 6px 12px rgba(11, 94, 215, 0.3); transform: translateY(-2px); }
+    .btn-back {
+      background: linear-gradient(to right, #6c757d, #5c636a);
+      color: #fff; box-shadow: 0 4px 6px rgba(108, 117, 125, 0.2);
+    }
+    .btn-back:hover { background: linear-gradient(to right, #5c636a, #495057); box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3); transform: translateY(-2px); color: #fff; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; }
+    .btn-info { background-color: #17a2b8; color: #fff; }
+    .btn-warning { background-color: #f39c12; color: #fff; }
+    .btn-danger { background-color: #e74c3c; color: #fff; }
+    .btn-success { background-color: #198754; color: #fff; }
+    .status-message {
+      padding: 12px 20px; border-radius: 8px; margin-top: 15px;
+      display: none; font-weight: 500;
+    }
+    .status-message.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; display: block; }
+    .status-message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+    .status-message.info { background: #cff4fc; color: #055160; border: 1px solid #b6effb; display: block; }
+    .remarks-section { margin-top: 20px; border-top: 1px solid #dee2e6; padding-top: 15px; }
+    .remarks-list { list-style: none; padding: 0; }
+    .remarks-list li {
+      padding: 8px 12px; margin-bottom: 4px;
+      background: #f8f9fa; border-radius: 4px;
+      border-left: 3px solid #0b5ed7;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .remarks-list li .remark-text { flex: 1; }
+    .remarks-list li .remark-time { font-size: 0.75rem; color: #6c757d; margin-left: 10px; white-space: nowrap; }
+    .remarks-list li .delete-remark-btn { background: none; border: none; color: #e74c3c; cursor: pointer; padding: 2px 6px; font-size: 12px; }
+    .standard-text {
+      background: #f8f9fa; border: 1px solid #dee2e6;
+      border-radius: 6px; padding: 15px; margin-top: 15px;
+      font-size: 14px; line-height: 1.6;
+    }
+    .standard-text p { margin-bottom: 8px; }
+    .standard-text .hashtag { color: #0b5ed7; font-weight: 600; }
+    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; margin-top: 10px; }
+    .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+    .file-input-display {
+      padding: 10px 16px; border: 2px dashed #cfd4da;
+      border-radius: 6px; text-align: center;
+      cursor: pointer; background: #f8f9fa; transition: all 0.3s;
+    }
+    .file-input-display:hover { border-color: #0b5ed7; background: #e7f1ff; }
+    .bbu-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .bbu-table th { background-color: #0b5ed7; color: white; padding: 8px 10px; text-align: left; font-size: 12px; }
+    .bbu-table td { padding: 6px 10px; border: 1px solid #dee2e6; font-size: 13px; }
+    .bbu-table tr:nth-child(even) { background-color: #f8f9fa; }
+    @media (max-width: 768px) {
+      body { padding: 15px; }
+      .form-container { padding: 20px; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1><i class="bi bi-file-earmark-text me-2"></i>Add MDCC Entry</h1>
+    <p class="subtitle">Fill in the MDCC details. Contractor name and address are auto-filled from the registered project.</p>
+
+    <div class="project-info" id="projectInfo">
+      <strong>Project:</strong> <span id="projectNameDisplay">Loading...</span>
+      <input type="hidden" id="projectId" />
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <form id="mdccForm">
+      <div class="form-section">MDCC Details</div>
+
+      <div class="form-group">
+        <label for="mdccNo" class="required">MDCC No.</label>
+        <input type="text" id="mdccNo" name="mdcc_no" required placeholder="Enter MDCC No." />
+      </div>
+
+      <div class="form-group">
+        <label for="mdccDate" class="required">MDCC Date</label>
+        <input type="date" id="mdccDate" name="mdcc_date" required />
+      </div>
+
+      <div class="form-section">Auto-Filled from Registered Project</div>
+
+      <div class="form-group">
+        <label for="projDetails">Project Details</label>
+        <textarea id="projDetails" name="project_details" rows="2" readonly style="background:#f8f9fa;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="rfbDetails">RfB Details</label>
+        <textarea id="rfbDetails" name="rfb_details" rows="2" readonly style="background:#f8f9fa;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="caNo">CA No.</label>
+        <input type="text" id="caNo" name="ca_no" readonly style="background:#f8f9fa;" />
+      </div>
+
+      <div class="form-group">
+        <label for="bbuRefNo">BBU Ref No.</label>
+        <input type="text" id="bbuRefNo" name="bbu_ref_no" readonly style="background:#f8f9fa;" />
+      </div>
+
+      <div class="form-group">
+        <label for="poNo">PO No.</label>
+        <input type="text" id="poNo" name="po_no" readonly style="background:#f8f9fa;" />
+      </div>
+
+      <div class="form-group">
+        <label for="laNo">LA No.</label>
+        <input type="text" id="laNo" name="la_no" readonly style="background:#f8f9fa;" />
+      </div>
+
+      <div class="form-group">
+        <label for="contractorName">Contractor Name</label>
+        <input type="text" id="contractorName" name="contractor_name" readonly style="background:#f8f9fa;" />
+      </div>
+
+      <div class="form-group">
+        <label for="contractorAddress">Contractor Address</label>
+        <textarea id="contractorAddress" name="contractor_address" rows="2" readonly style="background:#f8f9fa;"></textarea>
+      </div>
+
+      <div class="form-section">BBU Reference Details</div>
+
+      <div class="form-group">
+        <label for="bbuSlNo">BBU SL. NO.</label>
+        <input type="number" id="bbuSlNo" name="bbu_sl_no" placeholder="BBU serial number" />
+      </div>
+
+      <div class="form-group">
+        <label for="bbuItemSlNo">BBU ITEM SL. NO.</label>
+        <input type="number" id="bbuItemSlNo" name="bbu_item_sl_no" placeholder="BBU item serial number" />
+      </div>
+
+      <div class="form-group">
+        <label for="itemDescription">ITEM / MATERIAL DESCRIPTION</label>
+        <textarea id="itemDescription" name="item_material_description" rows="2" placeholder="Enter item/material description"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="uom">UoM</label>
+        <input type="text" id="uom" name="uom" placeholder="Unit of Measure" />
+      </div>
+
+      <div class="form-group">
+        <label for="mt">MT</label>
+        <input type="text" id="mt" name="mt" placeholder="Measurement Tonnage" />
+      </div>
+
+      <div class="form-group">
+        <label for="qtyAsPerBbu">QTY (As Per BBU)</label>
+        <input type="number" step="any" id="qtyAsPerBbu" name="qty_as_per_bbu" placeholder="Quantity as per BBU" />
+      </div>
+
+      <div class="form-section">MDCC Issuance</div>
+
+      <div class="form-group">
+        <label for="mdccIssuedTillDate">MDCC Issued Till Date</label>
+        <input type="number" id="mdccIssuedTillDate" name="mdcc_issued_till_date" value="0" placeholder="0" />
+      </div>
+
+      <div class="form-group">
+        <label for="mdccIssuedFor">MDCC Issued For</label>
+        <input type="text" id="mdccIssuedFor" name="mdcc_issued_for" placeholder="Enter MDCC issued for" />
+      </div>
+
+      <div class="form-group">
+        <label for="manufacturer">MANUFACTURER</label>
+        <input type="text" id="manufacturer" name="manufacturer" placeholder="Enter manufacturer name" />
+      </div>
+
+      <div class="form-group">
+        <label for="inspect">INSPECT</label>
+        <input type="text" id="inspect" name="inspect" placeholder="Enter inspection details" />
+      </div>
+
+      <div class="form-section">BBU Form Data (Equipment & UoM)</div>
+      <div class="standard-text" id="bbuFormData" style="display: none;">
+        <p><strong>Form Name:</strong> Equipment</p>
+        <p><strong>UoM:</strong> <span id="bbuUom">-</span></p>
+        <p><strong>MDCC Issued Till Date:</strong> <span id="bbuIssuedTillDate">0</span></p>
+        <p><strong>MDCC Issued For:</strong> <span id="bbuIssuedFor">-</span></p>
+      </div>
+
+      <div class="form-section">BBU Form Data (Equipment & UoM)</div>
+      <div class="standard-text" id="bbuFormData">
+        <p><strong>Form Name:</strong> Equipment</p>
+        <p><strong>UoM:</strong> <span id="bbuUom">-</span></p>
+        <p><strong>MDCC Issued Till Date:</strong> <span id="bbuIssuedTillDate">0</span></p>
+        <p><strong>MDCC Issued For:</strong> <span id="bbuIssuedFor">-</span></p>
+      </div>
+
+      <div class="form-section">Standard Dispatch Clearance Text</div>
+      <div class="standard-text">
+        <p><span class="hashtag">#</span> Aforementioned item(s) are hereby <strong>cleared for dispatch to site</strong>, as per the terms &amp; conditions of the RfB/CA cited.</p>
+        <p><span class="hashtag">#</span> Transhipment of consignment shall not be allowed.</p>
+        <p><span class="hashtag">#</span> This dispatch clearance and hold point/s (if any) however do not relieve the Contractor from any of the responsibilities mentioned in the RfB/CA including amendments, clarifications and addendums.</p>
+        <p><span class="hashtag">#</span> SECI keeps the right to inspect the material/s at site as well, as and when required.</p>
+      </div>
+
+      <div class="form-section">Remarks</div>
+      <div class="form-group full-width">
+        <label for="remarks">Remarks</label>
+        <textarea id="remarks" name="remarks" rows="2" placeholder="Add remarks here..."></textarea>
+      </div>
+
+      <div class="remarks-section">
+        <button type="button" class="btn btn-sm btn-info" id="addRemarkBtn"><i class="bi bi-plus-circle me-1"></i>Add Remark</button>
+        <ul class="remarks-list" id="remarksList"></ul>
+      </div>
+
+      <div class="btn-group">
+        <a href="/qa_external.html" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Back to QA Dashboard</a>
+        <button type="submit" class="btn-submit"><i class="bi bi-check2-square me-1"></i>Save MDCC Entry</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    $(document).ready(function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project_id');
+      const projectName = urlParams.get('project_name') || '';
+
+      if (projectId) {
+        $('#projectId').val(projectId);
+        $('#projectNameDisplay').text(decodeURIComponent(projectName));
+        loadProjectDetails(projectId);
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Project ID is required.' }).then(() => { window.location.href = '/qa_external.html'; });
+      }
+
+      // Set today's date as default for MDCC Date
+      const today = new Date().toISOString().split('T')[0];
+      $('#mdccDate').val(today);
+
+      // Add remark button
+      $('#addRemarkBtn').on('click', function () {
+        const remarkText = $('#remarks').val().trim();
+        if (!remarkText) { Swal.fire({ icon: 'warning', title: 'Warning', text: 'Please enter a remark.' }); return; }
+        const now = new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        $('#remarksList').append(`
+          <li>
+            <span class="remark-text"># ${escapeHtml(remarkText)}</span>
+            <span class="remark-time">${now}</span>
+            <button class="delete-remark-btn" onclick="this.parentElement.remove()"><i class="bi bi-x-lg"></i></button>
+          </li>
+        `);
+        $('#remarks').val('');
+      });
+
+      // Form submit
+      $('#mdccForm').on('submit', function (e) {
+        e.preventDefault();
+        const projectId = $('#projectId').val();
+        if (!projectId) { showStatus('Project ID missing.', 'error'); return; }
+
+        // Collect all remarks from the list
+        const remarksList = [];
+        $('#remarksList li').each(function () {
+          const text = $(this).find('.remark-text').text().replace(/^#\s*/, '');
+          remarksList.push(text);
+        });
+
+        const formData = {
+          mdcc_no: $('#mdccNo').val().trim(),
+          mdcc_date: $('#mdccDate').val(),
+          project_details: $('#projDetails').val().trim(),
+          rfb_details: $('#rfbDetails').val().trim(),
+          ca_no: $('#caNo').val().trim(),
+          bbu_ref_no: $('#bbuRefNo').val().trim(),
+          contractor_name: $('#contractorName').val().trim(),
+          contractor_address: $('#contractorAddress').val().trim(),
+          bbu_sl_no: $('#bbuSlNo').val() ? parseInt($('#bbuSlNo').val()) : null,
+          bbu_item_sl_no: $('#bbuItemSlNo').val() ? parseInt($('#bbuItemSlNo').val()) : null,
+          item_material_description: $('#itemDescription').val().trim(),
+          uom: $('#uom').val().trim(),
+          mt: $('#mt').val().trim(),
+          qty_as_per_bbu: $('#qtyAsPerBbu').val() ? parseFloat($('#qtyAsPerBbu').val()) : null,
+          mdcc_issued_till_date: $('#mdccIssuedTillDate').val() ? parseInt($('#mdccIssuedTillDate').val()) : 0,
+          mdcc_issued_for: $('#mdccIssuedFor').val().trim(),
+          manufacturer: $('#manufacturer').val().trim(),
+          inspect: $('#inspect').val().trim(),
+          remarks: remarksList.join('\n'),
+        };
+
+        if (!formData.mdcc_no || !formData.mdcc_date) {
+          showStatus('MDCC No. and MDCC Date are required.', 'error');
+          return;
+        }
+
+        showStatus('Saving MDCC entry...', 'info');
+
+        authFetch(`/api/data/qa/project/${projectId}/mdcc/add`, {
+          method: 'POST',
+          body: JSON.stringify(formData),
+        })
+          .then((res) => res.json())
+          .then((resObj) => {
+            if (resObj.success) {
+              showStatus('MDCC entry saved successfully!', 'success');
+              setTimeout(() => { window.location.href = '/qa_external.html'; }, 2000);
+            } else {
+              showStatus(resObj.message || 'Failed to save MDCC entry.', 'error');
+            }
+          })
+          .catch((err) => {
+            console.error('Error saving MDCC:', err);
+            showStatus('An error occurred. Please try again.', 'error');
+          });
+      });
+
+      function loadProjectDetails(projectId) {
+        authFetch(`/api/data/qa/projects/all`)
+          .then((res) => res.json())
+          .then((resObj) => {
+            if (!resObj.success) return;
+            const project = (resObj.data || []).find(p => p.qa_project_id === projectId);
+            if (!project) return;
+            $('#projDetails').val(project.project_details || '');
+            $('#rfbDetails').val(project.rfb_details || '');
+            $('#caNo').val(project.ca_no || '');
+            $('#bbuRefNo').val(project.bbu_no || '');
+            $('#contractorName').val(project.contractor_name || '');
+            $('#contractorAddress').val(project.contractor_address || '');
+            $('#mdccNo').val(project.mdcc_no || '');
+          })
+          .catch((err) => console.error('Error loading project details:', err));
+      }
+
+      // ── Pre-fill MDCC form from BBU data ───────────────────────
+      function prefillMdccFromBbu(bbuSlNo, bbuItemSlNo, bbuUom, bbuIssuedTillDate, bbuIssuedFor) {
+        // Set BBU form data display
+        $('#bbuFormData').show();
+        $('#bbuUom').text(bbuUom || '-');
+        $('#bbuIssuedTillDate').text(bbuIssuedTillDate || '0');
+        $('#bbuIssuedFor').text(bbuIssuedFor || '-');
+
+        // Pre-fill fields from BBU data (but keep editable)
+        $('#bbuSlNo').val(bbuSlNo || '').prop('readonly', false);
+        $('#bbuItemSlNo').val(bbuItemSlNo || '').prop('readonly', false);
+        $('#itemDescription').prop('readonly', false);
+        $('#uom').prop('readonly', false);
+        $('#mdccIssuedTillDate').prop('readonly', false).val(bbuIssuedTillDate || 0);
+        $('#mdccIssuedFor').prop('readonly', false);
+        $('#manufacturer').prop('readonly', false);
+        $('#inspect').prop('readonly', false);
+        $('#remarks').prop('readonly', false);
+      }
+
+      function showStatus(msg, type) {
+        const el = $('#statusMessage');
+        el.text(msg).removeClass('success error info').addClass(type).show();
+        if (type === 'success') {
+          setTimeout(() => el.fadeOut(), 3000);
+        }
+      }
+
+      function authFetch(url, options = {}) {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/'; return Promise.reject('No token'); }
+        const headers = { Authorization: `Bearer ${token}` };
+        return fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
+          .then((res) => {
+            if (res.status === 401) { localStorage.clear(); window.location.href = '/'; return Promise.reject('Unauthorized'); }
+            return res;
+          });
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // ── Open MDCC modal with BBU pre-fill ──────────────────────
+      function openMdccModalWithBbuContext(bbuSlNo, bbuItemSlNo, bbuUom, bbuIssuedTillDate, bbuIssuedFor) {
+        prefillMdccFromBbu(bbuSlNo, bbuItemSlNo, bbuUom, bbuIssuedTillDate, bbuIssuedFor);
+        new bootstrap.Modal(document.getElementById('mdccModal')).show();
+      }
+    });
+  </script>
+</body>
+</html>

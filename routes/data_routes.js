@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const dataController = require("../controllers/data_controllers");
@@ -504,6 +503,13 @@ router.get(
   verifyToken,
   auditLogger("Downloaded contract tender register Excel"),
   dataController.downloadTenderRegisterExcel,
+);
+
+router.get(
+  "/contracts/tenders/upload-date",
+  verifyToken,
+  auditLogger("Viewed contract tender register upload date"),
+  dataController.getTenderRegisterUploadDate,
 );
 
 router.get(
@@ -1065,6 +1071,151 @@ router.delete(
   verifyToken,
   auditLogger("Deleted State Wise Detail"),
   dataController.deleteStateWiseDetail,
+);
+
+// ──────────────────────────────────────────────
+// QA routes
+// ──────────────────────────────────────────────
+
+// Get all QA registered projects
+router.get(
+  "/qa/projects/all",
+  verifyToken,
+  auditLogger("Viewed all QA registered projects"),
+  dataController.getAllQaRegisteredProjects,
+);
+
+// Create a QA registered project (head only)
+router.post(
+  "/qa/project/add",
+  verifyToken,
+  requireDeptHeadAccess,
+  auditLogger("Added a QA registered project"),
+  dataController.createQaRegisteredProject,
+);
+
+// Update a QA registered project
+router.put(
+  "/qa/project/edit/:qa_project_id",
+  verifyToken,
+  auditLogger("Edited a QA registered project"),
+  dataController.editQaRegisteredProject,
+);
+
+// Delete a QA registered project
+router.delete(
+  "/qa/project/delete/:qa_project_id",
+  verifyToken,
+  auditLogger("Deleted a QA registered project"),
+  dataController.deleteQaRegisteredProject,
+);
+
+// Get BBU entries for a QA project
+router.get(
+  "/qa/project/:qa_project_id/bbu/all",
+  verifyToken,
+  auditLogger("Viewed BBU entries for a QA project"),
+  dataController.getQaBbuByProject,
+);
+
+// Create a BBU entry for a QA project
+router.post(
+  "/qa/project/:qa_project_id/bbu/add",
+  verifyToken,
+  auditLogger("Added a BBU entry for a QA project"),
+  dataController.createQaBbu,
+);
+
+// Update a BBU entry (edit/head)
+router.put(
+  "/qa/bbu/edit/:bbu_id",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Edited a QA BBU entry"),
+  dataController.editQaBbu,
+);
+
+// Delete a BBU entry (edit/head)
+router.delete(
+  "/qa/bbu/delete/:bbu_id",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Deleted a QA BBU entry"),
+  dataController.deleteQaBbu,
+);
+
+// Upload BBU Excel for a QA project (edit/head)
+router.post(
+  "/qa/project/:qa_project_id/bbu/upload",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Uploaded BBU Excel for a QA project"),
+  upload.single("bbu_excel"),
+  dataController.uploadQaBbuExcel,
+);
+
+// Upload MDCC files
+router.post(
+  "/qa/mdcc/upload-files",
+  verifyToken,
+  upload.array("files", 20),
+  (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(200).json({ success: true, files: [] });
+      }
+      const files = req.files.map(f => ({
+        original_name: f.originalname,
+        path: `/uploads/${f.filename}`
+      }));
+      res.status(200).json({ success: true, files });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "File upload failed", error: err.message });
+    }
+  }
+);
+
+// Get MDCC entries for a QA project
+router.get(
+  "/qa/project/:qa_project_id/mdcc/all",
+  verifyToken,
+  auditLogger("Viewed MDCC entries for a QA project"),
+  dataController.getQaMdccByProject,
+);
+
+// Create an MDCC entry for a QA project (edit/head)
+router.post(
+  "/qa/project/:qa_project_id/mdcc/add",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Added an MDCC entry for a QA project"),
+  dataController.createQaMdcc,
+);
+
+// Update an MDCC entry (edit/head)
+router.put(
+  "/qa/mdcc/edit/:mdcc_id",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Edited a QA MDCC entry"),
+  dataController.editQaMdcc,
+);
+
+// Delete an MDCC entry (edit/head)
+router.delete(
+  "/qa/mdcc/delete/:mdcc_id",
+  verifyToken,
+  requireDeptEditAccess,
+  auditLogger("Deleted a QA MDCC entry"),
+  dataController.deleteQaMdcc,
+);
+
+// Get QA summary
+router.get(
+  "/qa/summary",
+  verifyToken,
+  auditLogger("Viewed QA summary"),
+  dataController.getQaSummary,
 );
 
 module.exports = router;

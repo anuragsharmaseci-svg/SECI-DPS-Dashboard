@@ -17,6 +17,7 @@ function getDeptNamesFromPath(pathname) {
   if (path.startsWith("/contracts/")) return ["Contracts & Procurement"];
   if (path.startsWith("/reia/")) return ["REIA"];
   if (path.startsWith("/om/")) return ["O&M"];
+  if (path.startsWith("/qa/")) return ["QA"];
   if (path.startsWith("/energy/")) return ["Energy Management", "Energy Mangement"];
   return [];
 }
@@ -77,9 +78,33 @@ async function requireDeptEditAccess(req, res, next) {
     });
 
     const level = String(access?.access_level || "").trim().toLowerCase();
-    const allowEdit = level === "edit" || level === "head" || access?.can_edit === true;
+    // view: read-only (GET allowed, any mutation blocked)
+    // edit: can edit/upload/add/delete but NOT register project
+    // head: full access including register project
+    const isHead = level === 'head';
+    const isEdit = level === 'edit';
+    const isView = level === 'view';
 
-    if (!allowEdit) {
+    // Block register project for non-head users
+    if (req.path && req.path.includes('/qa/project/add') && !isHead) {
+      return res.status(403).json({ error: 'Access denied: head access required to register QA project' });
+    }
+
+    // For view users: block any mutation (POST/PUT/DELETE) on QA routes
+    if (isView && req.path && req.path.startsWith('/qa/') && !readOnlyMethods.includes(method)) {
+      return res.status(403).json({ error: 'Access denied: view access is read-only' });
+    }
+
+    // For edit users: allow mutations except register project (already blocked above)
+    if (isEdit && !readOnlyMethods.includes(method)) {
+      return next();
+    }
+
+    if (isHead && !readOnlyMethods.includes(method)) {
+      return next();
+    }
+
+    if (!isHead && !isEdit && !isView) {
       return res.status(403).json({ error: "Access denied: edit not allowed" });
     }
 
@@ -89,6 +114,22 @@ async function requireDeptEditAccess(req, res, next) {
   }
 }
 
+async function resolveUserDeptAccessLevel(user, deptId) {
+  if (!user || !deptId) return 'none';
+  if (user.role === 'admin') return 'head';
+  try {
+    const access = await UserEditAccess.findOne({
+      where: { user_id: user.user_id, dept_id: deptId },
+    });
+    const rawLevel = String(access?.access_level || '').trim().toLowerCase();
+    if (rawLevel === 'view' || rawLevel === 'edit' || rawLevel === 'head') return rawLevel;
+    return access?.can_edit === true ? 'edit' : 'view';
+  } catch (e) {
+    return 'none';
+  }
+}
+
 module.exports = {
   requireDeptEditAccess,
+  resolveUserDeptAccessLevel,
 };

@@ -417,6 +417,7 @@
     const departmentStatisticEntities = [];
     const departmentStatisticEntityFields = [];
     let businessDevelopmentData = [];
+    let qaRegisteredProjects = [];
 
     const icons = [
       "bi-house",
@@ -1145,6 +1146,13 @@
               return acc;
             }, {});
             // console.log(businessDevelopmentData);
+          }
+          if (departmentDetails.dept_name === "QA") {
+            const qaResponse = await authFetch(`/api/data/qa/projects/all`);
+            const qaJSON = await qaResponse.json();
+            const qaData = qaJSON.data;
+            qaRegisteredProjects = qaData || [];
+            // console.log(qaRegisteredProjects);
           }
           //get department statistics and show them here
           const statsResponse = await authFetch(
@@ -2294,6 +2302,89 @@
         chartInstance.dept_name = dept.dept_name;
         chartInstance.statistic_id = stat ? stat.statistic_id : null;
         chartInstance.relatedEntities = relatedEntities;
+      } else if (dept.dept_name === "QA") {
+        const qaLabels = qaRegisteredProjects.map((p) => p.project_name || "Project");
+        const qaValues = qaRegisteredProjects.map(() => 1);
+        const qaTotal = qaRegisteredProjects.length;
+
+        document.getElementById("departmentContent").innerHTML = `
+                    <h3><b>${dept.dept_name}</b></h3>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <h3 class="mb-0"><b>Registered Projects</b></h3>
+                          <a href="/add_qa_project.html" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Register Project</a>
+                        </div>
+                        <div id="chartsContainer" class="row mt-4"></div>
+                      `;
+        const chartsContainer = document.getElementById("chartsContainer");
+        chartsContainer.innerHTML = "";
+        const chartWrapper = document.createElement("div");
+        chartWrapper.className = "col-12 d-flex justify-content-center mb-4";
+        chartWrapper.innerHTML = `
+                        <div class="card" style="height: 800px; width: 1500px; margin: auto;">
+                          <div class="card-body">
+                            <h2 class="card-title text-center"><b>QA Registered Projects</b></h6>
+                            <div>
+                              <canvas id="qa-chart" width="600" height="400" style="display: block; margin: auto;"></canvas>
+                            </div>
+                            <div class="text-center mt-3 d-flex flex-wrap justify-content-center gap-2">
+                            </div>
+                          </div>
+                        </div>
+                      `;
+        chartsContainer.appendChild(chartWrapper);
+
+        const qaChartInstance = new Chart(document.getElementById("qa-chart"), {
+          type: "doughnut",
+          data: {
+            labels: qaLabels,
+            datasets: [
+              {
+                data: qaValues,
+                backgroundColor: [
+                  "#007bff",
+                  "#28a745",
+                  "#ffc107",
+                  "#dc3545",
+                  "#6610f2",
+                  "#fd7e14",
+                  "#17a2b8",
+                  "#e83e8c",
+                  "#6c757d",
+                  "#20c997",
+                ],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return context.label || "Project";
+                  },
+                },
+              },
+            },
+            elements: {
+              center: {
+                text: `${qaTotal.toString()} Projects`,
+                color: "#333",
+                minFontSize: 20,
+                lineHeight: 25,
+              },
+            },
+            onClick: (evt, activeEls, chart) => {
+              window.location.href = "/qa_external.html";
+            },
+          },
+        });
+
+        qaChartInstance.dept_id = dept.dept_id;
+        qaChartInstance.dept_name = dept.dept_name;
+        qaChartInstance.statistic_id = stat ? stat.statistic_id : null;
       } else if (dept.dept_name === "O&M") {
         try {
           const deptStats = departmentStatistics[dept.dept_id] || [];
@@ -2766,7 +2857,7 @@
                           <div class="col-md-6 mb-3">
                             <div class="card h-100">
                               <div class="card-body text-center" style="padding:1.75rem;">
-                                <h5 class="card-title mb-3" style="cursor:pointer;" onclick="window.location.href='/cp_own_projects.html'">Own Project <i class="bi bi-box-arrow-up-right" style="font-size:0.8rem;"></i></h5>
+                                <h5 class="card-title mb-3" style="cursor:pointer;" onclick="window.location.href='/cp_own_projects.html'">Projects <i class="bi bi-box-arrow-up-right" style="font-size:0.8rem;"></i></h5>
                                 <canvas id="cpOwnProjectsDonut" width="400" height="360" style="display:block;margin:auto;max-width:100%;height:auto;cursor:pointer;" onclick="window.location.href='/cp_own_projects.html'"></canvas>
                               </div>
                             </div>
@@ -2852,7 +2943,7 @@
             if (!entries.length) {
               const ctx = document.getElementById('cpOwnProjectsDonut');
               if (ctx) {
-                ctx.outerHTML = '<p class="text-muted mt-3">No C&P own projects found.</p>';
+                ctx.outerHTML = '<p class="text-muted mt-3">No C&P Projects found.</p>';
               }
               return;
             }
@@ -2918,10 +3009,10 @@
               }
             });
           } catch (e) {
-            console.warn('C&P Own Projects donut render failed', e);
+            console.warn('C&P Projects donut render failed', e);
             const ctx = document.getElementById('cpOwnProjectsDonut');
             if (ctx) {
-              ctx.outerHTML = '<p class="text-muted mt-3">C&P own projects data unavailable.</p>';
+              ctx.outerHTML = '<p class="text-muted mt-3">C&P Projects data unavailable.</p>';
             }
           }
         })();
@@ -3062,6 +3153,8 @@
                   } else if (dept_name == "Business Development") {
                     window.location.href =
                       "/business_development_external.html";
+                  } else if (dept_name == "QA") {
+                    window.location.href = "/qa_external.html";
                   } else {
                     const isPmcCEDetail =
                       statistic_name.includes("pmc") &&
@@ -3120,6 +3213,7 @@
           else if (key.includes("engineering")) filename = "Engineering.png";
           else if (key.includes("energy") && key.includes("management")) filename = "Energy Management.png";
           else if (key.includes("energymangement")) filename = "Energy Management.png";
+          else if (key === "qa" || key.includes("quality")) filename = "Qa.jpg";
 
           if (!filename) return "";
           return "/icons/" + encodeURIComponent(filename);
@@ -3232,6 +3326,9 @@
             entityValues = Object.values(businessDevelopmentData).map(
               (value) => parseFloat(value)
             );
+          } else if (d.dept_name == "QA") {
+            entityLabels = qaRegisteredProjects.map((p) => p.project_name || "Project");
+            entityValues = qaRegisteredProjects.map(() => 1);
           } else {
             entityLabels = relatedEntities.map((e) => e.entity_name);
             entityValues = relatedEntities.map((e) => e.entity_value);
@@ -3537,6 +3634,8 @@
                   setTimeout(() => { window.location.href = '/contracts_external.html'; }, 180);
                 } else if (txt.includes('business development')) {
                   setTimeout(() => { window.location.href = '/business_development_external.html'; }, 180);
+                } else if (txt.includes('qa')) {
+                  setTimeout(() => { window.location.href = '/qa_external.html'; }, 180);
                 } else if (txt.includes('energy management')) {
                   setTimeout(() => { window.location.href = '/energy_management.html'; }, 180);
                 } else if (txt.includes('engineering')) {

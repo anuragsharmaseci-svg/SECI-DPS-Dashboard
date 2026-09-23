@@ -2206,6 +2206,31 @@ router.put("/execution/issue/:id", verifyToken, upload.single("doc_file"), async
 });
 
 // Debug: list routes registered on this router
+// ── QA MDCC Inspect file uploads (Excel / PDF) ──────────────
+// Used by qa_external.html MDCC modal to attach Inspect evidence files.
+router.post(
+  "/qa/mdcc/inspect/upload",
+  verifyToken,
+  upload.single("inspect_file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded" });
+      }
+      // Return the stored filename relative to the uploads dir; the /uploads static
+      // route serves these files, so clients can build a download URL from this.
+      return res.status(200).json({
+        success: true,
+        message: "File uploaded successfully",
+        data: { filename: req.file.filename, original: req.file.originalname, url: `/uploads/${req.file.filename}` },
+      });
+    } catch (err) {
+      console.error("qa mdcc inspect upload error:", err);
+      return res.status(500).json({ success: false, message: "Failed to upload inspect file" });
+    }
+  }
+);
+
 router.get('/__debug_routes', (req, res) => {
   try {
     const routes = router.stack

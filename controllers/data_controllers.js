@@ -517,8 +517,8 @@ exports.savePmcSliceMeta = async (req, res) => {
                   pmc_entry_id: existingTarget.pmc_entry_id,
                   project_name: existingTarget.project_name,
                   number_of_projects: targetValues.number_of_projects,
-                  loa_date: itObj.loa_date || existingTarget.loa_date || null,
-                  scod: itObj.scod || existingTarget.scod || null,
+                  loa_date: itObj.loa_date || null,
+                  scod: itObj.scod || null,
                   fields: itObj.fields || existingTarget.fields || [],
                 });
               } else if (normalizedTarget.includes('bms') && models.PmcBmsMeta) {
@@ -528,8 +528,8 @@ exports.savePmcSliceMeta = async (req, res) => {
                   pmc_entry_id: existingTarget.pmc_entry_id,
                   project_name: existingTarget.project_name,
                   number_of_projects: targetValues.number_of_projects,
-                  loa_date: itObj.loa_date || existingTarget.loa_date || null,
-                  scod: itObj.scod || existingTarget.scod || null,
+                  loa_date: itObj.loa_date || null,
+                  scod: itObj.scod || null,
                   fields: itObj.fields || existingTarget.fields || [],
                 });
               } else if (normalizedTarget.includes('execution') && models.PmcExecutionMeta) {
@@ -539,8 +539,8 @@ exports.savePmcSliceMeta = async (req, res) => {
                   pmc_entry_id: existingTarget.pmc_entry_id,
                   project_name: existingTarget.project_name,
                   project_capacity: targetValues.project_capacity,
-                  loa_date: itObj.loa_date || existingTarget.loa_date || null,
-                  scod: itObj.scod || existingTarget.scod || null,
+                  loa_date: itObj.loa_date || null,
+                  scod: itObj.scod || null,
                   land: targetValues.land,
                   fields: itObj.fields || existingTarget.fields || [],
                 });
@@ -912,6 +912,9 @@ const {
   PmcCeCorrespondence,
   PmcSliceMeta,
   OwnProject,
+  QaRegisteredProject,
+  QaBbu,
+  QaMdcc,
 } = require("../models").models;
 
 const { sequelize } = require("../models");
@@ -2613,9 +2616,19 @@ exports.getFieldsForDepartmentEntityStatistic = async (req, res) => {
 //         .filter((f) => f.field_id)
 //         .map((f) => f.field_id);
 
-//       // Soft-delete removed fields
+//       const incomingFieldNames = entity.fields
+//         .filter((f) => f.field_name)
+//         .map((f) => f.field_name.trim());
+
+//       // Soft-delete fields not included in the incoming payload
 //       for (const dbField of existingFields) {
-//         if (!incomingFieldIds.includes(dbField.field_id)) {
+//         const isStillPresent = entity.fields.some(
+//           (f) =>
+//             (f.field_id && f.field_id === dbField.field_id) ||
+//             (f.field_name && f.field_name.trim() === dbField.field_name.trim()),
+//         );
+
+//         if (!isStillPresent) {
 //           await dbField.update({ is_active: false }, { transaction });
 //         }
 //       }
@@ -2655,7 +2668,7 @@ exports.getFieldsForDepartmentEntityStatistic = async (req, res) => {
 //               field_name: field.field_name.trim(),
 //             },
 //             defaults: {
-//               dept_id, // add this
+//               dept_id,
 //               statistic_id,
 //               field_value: field.field_value,
 //               field_unit: field.field_unit ? field.field_unit.trim() : "MW",
@@ -3219,16 +3232,13 @@ function summarizeTenderRows(rows) {
   let totalPpa = 0;
 
   for (const row of rows) {
-    // ── Commissioned: count ALL rows regardless of technology ───
-    // The Excel's Grand Total = sum of col71 for all data rows.
-    // Developer sub-rows (no technology) also contribute actual commissioned
-    // capacity. Skipping them loses ~19,565 MW. So we sum commissioned
-    // BEFORE the technology filter, using only columns representing actual
-    // commissioned capacity (col71), not planned commissioning (col58).
+    // ── Count ALL rows regardless of technology for these KPIs ───
     totalCommissioned += positiveValue(row.commissioned_capacity_mw);
+    totalPsa += positiveValue(row.psa_capacity_mw);
+    totalPpa += positiveValue(row.ppa_capacity_mw);
 
     // Base validation: only include rows with a recognized technology
-    // for all other KPIs (tendered, ERA, PPA, PSA, tariff, etc.)
+    // for other KPIs (tendered, ERA, tariff, year breakdowns, etc.)
     const tech = normalizeTechnologyType(row.technology_type);
     if (!tech || !CANONICAL_TECHNOLOGIES.includes(tech)) continue;
 
@@ -3254,8 +3264,6 @@ function summarizeTenderRows(rows) {
     totalTendered += tc;
     totalEraAwarded += ec;
     totalLoaLoi += lc;
-    totalPsa += psc;
-    totalPpa += ppc;
 
     // ── Technology breakdown ───────────────────────────────────
     if (!techMap[tech]) {
@@ -3268,8 +3276,9 @@ function summarizeTenderRows(rows) {
     techMap[tech].commissioned_capacity += cc;
 
     // ── Year breakdown (tendered capacity only) ────────────────
-    if (!yearMap[year]) yearMap[year] = { capacity: 0 };
+    if (!yearMap[year]) yearMap[year] = { capacity: 0, commissioned_capacity: 0 };
     yearMap[year].capacity += tc;
+    yearMap[year].commissioned_capacity += cc;
     if (tenderKey) {
       if (!yearTenderKeys[year]) yearTenderKeys[year] = new Set();
       yearTenderKeys[year].add(tenderKey);
@@ -3292,7 +3301,7 @@ function summarizeTenderRows(rows) {
 
   const byYear = Object.entries(yearMap).map(([year, values]) => {
     const keys = yearTenderKeys[year];
-    return { year, count: keys ? keys.size : 0, capacity: values.capacity };
+    return { year, count: keys ? keys.size : 0, capacity: values.capacity, commissioned_capacity: values.commissioned_capacity };
   });
 
   const byStage = Object.entries(stageMap).map(([stage, values]) => {
@@ -3537,6 +3546,36 @@ exports.downloadTenderRegisterExcel = async (req, res) => {
   } catch (err) {
     console.error("Error downloading tender register Excel:", err);
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+/**
+ * Get the most recent tender register upload date.
+ * Returns the uploaded_at timestamp of the latest active TenderRegister row.
+ */
+exports.getTenderRegisterUploadDate = async (req, res) => {
+  try {
+    const row = await TenderRegister.findOne({
+      where: { is_active: true },
+      order: [["uploaded_at", "DESC"]],
+      attributes: ["uploaded_at"],
+    });
+
+    if (!row || !row.uploaded_at) {
+      return res.status(404).json({
+        error: "No tender register upload found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Tender register upload date fetched successfully",
+      upload_date: row.uploaded_at,
+    });
+  } catch (err) {
+    console.error("Error fetching tender register upload date:", err);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
   }
 };
 
@@ -3933,7 +3972,6 @@ exports.getOMSolarBESSDataForDate = async (req, res) => {
 
     const last7DaysStart = shiftDate(requestedDate, -7);
     const last7DaysEnd = shiftDate(requestedDate, 0);
-
     const d = new Date(requestedDate + "T00:00:00");
     d.setFullYear(d.getFullYear() - 1);
     const lastYearSameDate = d.toISOString().slice(0, 10);
@@ -4898,34 +4936,30 @@ exports.createPmcEntry = async (req, res) => {
     const amountPending = body.amountPending || body.amount_pending || Number(body.amount_pending) || 0;
     const status = body.status || body.current_status || 'Pending';
     const milestones = Array.isArray(body.milestones) ? body.milestones : (body.milestoneRows || []);
-    const normalizedServiceType = String(serviceType || '').trim().toUpperCase();
-    const isExecutionService = normalizedServiceType === 'EXECUTION' || normalizedServiceType === 'C&E';
-      // Compute display status from milestones with precedence:
-      // 1) Last milestone with invoice_raised > 0 -> use its milestone text (or status if text missing)
-      // 2) Last milestone with status 'Received' -> use its milestone text
-      // 3) Last milestone with status 'Pending' -> use its milestone text
-      // 4) Fallback to provided status or 'Pending'
+    
+      
+      // Fetch the existing entry
+      const entry = await PmcProject.findByPk(pmc_entry_id);
+      if (!entry) {
+        return res.status(404).json({
+          success: false,
+          message: "PMC entry not found.",
+        });
+      }
+
+      // Compute display status from milestones (same logic as on frontend):
       let displayStatus = status || 'Pending';
       try {
         if (Array.isArray(milestones) && milestones.length) {
-          // 1) last with invoice_raised > 0
           const raised = milestones.filter(m => Number(m.invoice_raised || m.invoiceRaised || 0) > 0);
           if (raised.length) {
             const last = raised[raised.length - 1];
             displayStatus = last.milestone || displayStatus;
           } else {
-            // 2) last received
-            const received = milestones.filter(m => String(m.status || '').toLowerCase() === 'received');
-            if (received.length) {
-              const last = received[received.length - 1];
+            const pending = milestones.filter(m => String(m.status || '').toLowerCase() === 'pending');
+            if (pending.length) {
+              const last = pending[pending.length - 1];
               displayStatus = last.milestone || last.status || displayStatus;
-            } else {
-              // 3) last pending
-              const pending = milestones.filter(m => String(m.status || '').toLowerCase() === 'pending');
-              if (pending.length) {
-                const last = pending[pending.length - 1];
-                displayStatus = last.milestone || last.status || displayStatus;
-              }
             }
           }
         }
@@ -4933,7 +4967,7 @@ exports.createPmcEntry = async (req, res) => {
         console.warn('Error computing displayStatus from milestones', e);
       }
 
-      const entryPayload = {
+      await entry.update({
         sno,
         service_type: serviceType,
         client,
@@ -4947,59 +4981,12 @@ exports.createPmcEntry = async (req, res) => {
         amount_received: amountReceived,
         amount_pending: amountPending,
         status: displayStatus,
-      };
+      });
 
-      // Execution projects use a stable UUID derived from project_name so all tabs
-      // (milestone/docs/dpr/mpr/correspondences/issues) remain linked even if filled in any order.
-      let entry = null;
-      let reusedExecutionId = false;
-      if (isExecutionService && projectName) {
-        const stableExecutionId = buildExecutionEntityId(projectName);
-        if (stableExecutionId) {
-          const existingExecutionEntry = await PmcProject.findByPk(stableExecutionId);
-          if (existingExecutionEntry) {
-            await existingExecutionEntry.update(entryPayload);
-            entry = existingExecutionEntry;
-            reusedExecutionId = true;
-          } else {
-            entry = await PmcProject.create({
-              pmc_entry_id: stableExecutionId,
-              ...entryPayload,
-            });
-          }
-        }
-      }
-
-      if (!entry) {
-        // For DPR/PFR, try to reuse an existing entry by project name/client/details
-        // so adding milestones does not create a new UUID for the same project.
-        if (!isExecutionService) {
-          const lookupName = String(projectName || client || projectDetails || '').trim().toLowerCase();
-          if (lookupName) {
-            const candidates = await PmcProject.findAll({
-              where: { service_type: 'DPR' },
-              order: [["createdAt", "DESC"]],
-            });
-            const match = candidates.find(e => {
-              const enName = String(e.project_name || e.client || e.project_details || '').trim().toLowerCase();
-              return enName && enName === lookupName;
-            });
-            if (match) {
-              await match.update(entryPayload);
-              entry = match;
-            }
-          }
-        }
-      }
-
-      if (!entry) {
-        entry = await PmcProject.create(entryPayload);
-      }
-
-    await PmcMilestone.destroy({ where: { pmc_entry_id: entry.pmc_entry_id } });
+    await PmcMilestone.destroy({ where: { pmc_entry_id } });
     if (Array.isArray(milestones) && milestones.length) {
       const milestoneRows = milestones.map((m, idx) => ({
-        pmc_entry_id: entry.pmc_entry_id,
+        pmc_entry_id,
         sr_no: idx + 1,
         milestone: m.milestone || "",
         stage_payment: Number(m.stagePayment) || 0,
@@ -5014,7 +5001,7 @@ exports.createPmcEntry = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: reusedExecutionId ? "PMC execution entry saved successfully." : "PMC entry created successfully.",
+      message: "PMC entry created successfully.",
       data: entry,
     });
   } catch (error) {
@@ -6040,7 +6027,7 @@ exports.getAllDiscomPayments = async (req, res) => {
     return res.json(items);
   } catch (err) {
     console.error("getAllDiscomPayments error:", err);
-    return res.status(500).json({ error: "Failed to fetch DISCOM payments", detail: err.message });
+    return res.status(500).json({ error: "Failed to fetch discom payments", detail: err.message });
   }
 };
 
@@ -6053,7 +6040,7 @@ exports.getDiscomPaymentById = async (req, res) => {
     return res.json(item);
   } catch (err) {
     console.error("getDiscomPaymentById error:", err);
-    return res.status(500).json({ error: "Failed to fetch DISCOM payment", detail: err.message });
+    return res.status(500).json({ error: "Failed to fetch discom payment", detail: err.message });
   }
 };
 
@@ -6081,7 +6068,7 @@ exports.createDiscomPayment = async (req, res) => {
     return res.json(created);
   } catch (err) {
     console.error("createDiscomPayment error:", err);
-    return res.status(500).json({ error: "Failed to create DISCOM payment", detail: err.message });
+    return res.status(500).json({ error: "Failed to create discom payment", detail: err.message });
   }
 };
 
@@ -6104,7 +6091,7 @@ exports.editDiscomPayment = async (req, res) => {
     return res.json(item);
   } catch (err) {
     console.error("editDiscomPayment error:", err);
-    return res.status(500).json({ error: "Failed to edit DISCOM payment", detail: err.message });
+    return res.status(500).json({ error: "Failed to edit discom payment", detail: err.message });
   }
 };
 
@@ -6118,7 +6105,7 @@ exports.deleteDiscomPayment = async (req, res) => {
     return res.json({ ok: true });
   } catch (err) {
     console.error("deleteDiscomPayment error:", err);
-    return res.status(500).json({ error: "Failed to delete DISCOM payment", detail: err.message });
+    return res.status(500).json({ error: "Failed to delete discom payment", detail: err.message });
   }
 };
 
@@ -6414,5 +6401,584 @@ exports.deleteDiscomPayment = async (req, res) => {
   } catch (err) {
     console.error("deleteDiscomPayment error:", err);
     return res.status(500).json({ error: "Failed to delete discom payment", detail: err.message });
+  }
+};
+
+/**
+ *
+ * QA (Quality Assurance) Controllers
+ *
+ */
+
+// ── QA Registered Projects ──────────────────────────────────────────────
+exports.getAllQaRegisteredProjects = async (req, res) => {
+  try {
+    const projects = await QaRegisteredProject.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+    return res.status(200).json({ success: true, data: projects });
+  } catch (err) {
+    console.error("getAllQaRegisteredProjects error:", err);
+    return res.status(500).json({ success: false, message: "Failed to load QA projects" });
+  }
+};
+
+exports.createQaRegisteredProject = async (req, res) => {
+  try {
+    const {
+      project_name,
+      project_details,
+      rfb_details,
+      ca_no,
+      bbu_no,
+      po_no,
+      loa_no,
+      contractor_name,
+      contractor_address,
+      mdcc_no,
+    } = req.body;
+
+    if (!project_name) {
+      return res.status(400).json({ success: false, message: "Project name is required" });
+    }
+
+    const project = await QaRegisteredProject.create({
+      project_name,
+      project_details: project_details || null,
+      rfb_details: rfb_details || null,
+      ca_no: ca_no || null,
+      bbu_no: bbu_no || null,
+      po_no: po_no || null,
+      loa_no: loa_no || null,
+      contractor_name: contractor_name || null,
+      contractor_address: contractor_address || null,
+      mdcc_no: mdcc_no || null,
+    });
+
+    return res.status(201).json({ success: true, data: project, message: "Project registered successfully" });
+  } catch (err) {
+    console.error("createQaRegisteredProject error:", err);
+    return res.status(500).json({ success: false, message: "Failed to register project" });
+  }
+};
+
+exports.editQaRegisteredProject = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const project = await QaRegisteredProject.findByPk(qa_project_id);
+    if (!project) return res.status(404).json({ success: false, message: "Project not found" });
+
+    const {
+      project_name,
+      project_details,
+      rfb_details,
+      ca_no,
+      bbu_no,
+      po_no,
+      loa_no,
+      contractor_name,
+      contractor_address,
+      mdcc_no,
+    } = req.body;
+
+    if (project_name !== undefined) project.project_name = project_name;
+    if (project_details !== undefined) project.project_details = project_details;
+    if (rfb_details !== undefined) project.rfb_details = rfb_details;
+    if (ca_no !== undefined) project.ca_no = ca_no;
+    if (bbu_no !== undefined) project.bbu_no = bbu_no;
+    if (po_no !== undefined) project.po_no = po_no;
+    if (loa_no !== undefined) project.loa_no = loa_no;
+    if (contractor_name !== undefined) project.contractor_name = contractor_name;
+    if (contractor_address !== undefined) project.contractor_address = contractor_address;
+    if (mdcc_no !== undefined) project.mdcc_no = mdcc_no;
+
+    await project.save();
+    return res.status(200).json({ success: true, data: project, message: "Project updated successfully" });
+  } catch (err) {
+    console.error("editQaRegisteredProject error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update project" });
+  }
+};
+
+exports.deleteQaRegisteredProject = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const project = await QaRegisteredProject.findByPk(qa_project_id);
+    if (!project) return res.status(404).json({ success: false, message: "Project not found" });
+
+    await QaBbu.destroy({ where: { qa_project_id } });
+    await QaMdcc.destroy({ where: { qa_project_id } });
+    await project.destroy();
+
+    return res.status(200).json({ success: true, message: "Project deleted successfully" });
+  } catch (err) {
+    console.error("deleteQaRegisteredProject error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete project" });
+  }
+};
+
+// ── QA BBU (Bill of Quantities) ─────────────────────────────────────────
+exports.getQaBbuByProject = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const rows = await QaBbu.findAll({
+      where: { qa_project_id },
+      order: [["bbu_sl_no", "ASC"]],
+    });
+    return res.status(200).json({ success: true, data: rows });
+  } catch (err) {
+    console.error("getQaBbuByProject error:", err);
+    return res.status(500).json({ success: false, message: "Failed to load BBU entries" });
+  }
+};
+
+exports.createQaBbu = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const {
+      bbu_sl_no,
+      name_equipment,
+      uom,
+      item_category,
+      quantity,
+      unit_price,
+      basic_price,
+      gst_percent,
+      gst,
+      total_value,
+    } = req.body;
+
+    if (!name_equipment) {
+      return res.status(400).json({ success: false, message: "Equipment name is required" });
+    }
+
+    const row = await QaBbu.create({
+      qa_project_id,
+      bbu_sl_no: bbu_sl_no != null ? bbu_sl_no : 0,
+      name_equipment,
+      uom: uom || null,
+      item_category: item_category || null,
+      quantity: quantity != null ? quantity : null,
+      unit_price: unit_price != null ? unit_price : null,
+      basic_price: basic_price != null ? basic_price : null,
+      gst_percent: gst_percent || null,
+      gst: gst != null ? gst : null,
+      total_value: total_value != null ? total_value : null,
+    });
+
+    return res.status(201).json({ success: true, data: row, message: "BBU entry added" });
+  } catch (err) {
+    console.error("createQaBbu error:", err);
+    return res.status(500).json({ success: false, message: "Failed to add BBU entry" });
+  }
+};
+
+exports.editQaBbu = async (req, res) => {
+  try {
+    const { bbu_id } = req.params;
+    const row = await QaBbu.findByPk(bbu_id);
+    if (!row) return res.status(404).json({ success: false, message: "BBU entry not found" });
+
+    const {
+      bbu_sl_no,
+      name_equipment,
+      uom,
+      item_category,
+      quantity,
+      unit_price,
+      basic_price,
+      gst_percent,
+      gst,
+      total_value,
+    } = req.body;
+
+    if (bbu_sl_no !== undefined) row.bbu_sl_no = bbu_sl_no;
+    if (name_equipment !== undefined) row.name_equipment = name_equipment;
+    if (uom !== undefined) row.uom = uom;
+    if (item_category !== undefined) row.item_category = item_category;
+    if (quantity !== undefined) row.quantity = quantity;
+    if (unit_price !== undefined) row.unit_price = unit_price;
+    if (basic_price !== undefined) row.basic_price = basic_price;
+    if (gst_percent !== undefined) row.gst_percent = gst_percent;
+    if (gst !== undefined) row.gst = gst;
+    if (total_value !== undefined) row.total_value = total_value;
+
+    await row.save();
+    return res.status(200).json({ success: true, data: row, message: "BBU entry updated" });
+  } catch (err) {
+    console.error("editQaBbu error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update BBU entry" });
+  }
+};
+
+exports.deleteQaBbu = async (req, res) => {
+  try {
+    const { bbu_id } = req.params;
+    const row = await QaBbu.findByPk(bbu_id);
+    if (!row) return res.status(404).json({ success: false, message: "BBU entry not found" });
+    await row.destroy();
+    return res.status(200).json({ success: true, message: "BBU entry deleted" });
+  } catch (err) {
+    console.error("deleteQaBbu error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete BBU entry" });
+  }
+};
+
+// ── QA BBU Excel Upload ─────────────────────────────────────────────────
+function normalizeBbuHeader(key) {
+  return String(key || "")
+    .toLowerCase()
+    .replace(/%/g, "percent")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function mapBbuExcelRow(rawRow) {
+  const mapping = {
+    bbu_sl_no: ["bbuslno", "slno", "sno", "sino", "serialno", "sl", "no", "si"],
+    bbu_item_sl_no: ["bbuitemslno", "itemslno", "bbuitemno", "itemno", "bbuitemserialno"],
+    item_category: ["itemcategory", "category", "itemcat", "cat"],
+    name_equipment: ["nameequipment", "nameofequipment", "equipmentname", "descriptionofequipment", "equipment", "itemdescription", "itemname", "description", "particulars", "item", "name"],
+    uom: ["uom", "unit", "unitofmeasurement", "unitofmeasure", "measurementunit", "unitoflmeasurement"],
+    quantity: ["quantity", "qty", "qtyasperbbu", "totalquantity"],
+    unit_price: ["unitprice", "rate", "priceperunit", "unitrate"],
+    basic_price: ["basicprice", "basicamount", "baseprice", "amount", "basic"],
+    gst: ["gstamount", "tax", "cgst", "sgst", "gst", "gstvalue"],
+    gst_percent: ["gstpercent", "gstratepercent", "gstpercentage", "gstrate"],
+    total_value: ["totalvalue", "total", "value", "totalcost", "cost", "amounttotal", "totalamount", "grandtotal"],
+  };
+
+  const fieldMap = {};
+  const exact = {};
+  Object.keys(rawRow).forEach((key) => {
+    exact[normalizeBbuHeader(key)] = key;
+  });
+
+  const normalizedKeys = Object.keys(exact);
+  Object.keys(mapping).forEach((field) => {
+    const aliases = mapping[field];
+    for (const alias of aliases) {
+      if (exact[alias] !== undefined) {
+        fieldMap[field] = exact[alias];
+        break;
+      }
+    }
+    if (fieldMap[field] === undefined) {
+      // Fallback: contains match (e.g. "BBU SL. NO." normalized to "bbuslno")
+      const hit = normalizedKeys.find((nk) => aliases.some((alias) => nk.includes(alias)));
+      if (hit) {
+        fieldMap[field] = exact[hit];
+      }
+    }
+  });
+
+  const num = (v) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(String(v).replace(/[,₹\s]/g, ""));
+    return isNaN(n) ? null : n;
+  };
+  const str = (v) => (v === null || v === undefined || v === "" ? null : String(v).trim());
+
+  let gst_percent_val = str(rawRow[fieldMap.gst_percent]);
+  if (gst_percent_val && !gst_percent_val.includes('%')) {
+    let numGstP = Number(gst_percent_val);
+    if (!isNaN(numGstP)) {
+      if (numGstP > 0 && numGstP < 1) {
+        gst_percent_val = (numGstP * 100) + '%';
+      } else {
+        gst_percent_val = numGstP + '%';
+      }
+    }
+  }
+
+  return {
+    bbu_sl_no: str(rawRow[fieldMap.bbu_sl_no]),
+    bbu_item_sl_no: str(rawRow[fieldMap.bbu_item_sl_no]),
+    item_category: str(rawRow[fieldMap.item_category]),
+    name_equipment: str(rawRow[fieldMap.name_equipment]),
+    uom: str(rawRow[fieldMap.uom]),
+    quantity: num(rawRow[fieldMap.quantity]),
+    unit_price: num(rawRow[fieldMap.unit_price]),
+    basic_price: num(rawRow[fieldMap.basic_price]),
+    gst: num(rawRow[fieldMap.gst]),
+    gst_percent: gst_percent_val,
+    total_value: num(rawRow[fieldMap.total_value]),
+  };
+}
+
+exports.uploadQaBbuExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Excel file is required" });
+    }
+
+    const { qa_project_id } = req.params;
+    const existingCount = await QaBbu.count({ where: { qa_project_id } });
+    if (existingCount > 0) {
+      return res.status(400).json({ success: false, message: "BBU has already been uploaded for this project. BBU can only be uploaded once per project." });
+    }
+
+    const xlsx = require("xlsx");
+    const workbook = xlsx.readFile(req.file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+    if (!raw || raw.length === 0) {
+      return res.status(400).json({ success: false, message: "Excel file is empty" });
+    }
+
+    // Detect header row: first row containing a recognizable BBU header
+    let headerRowIndex = 0;
+    for (let i = 0; i < Math.min(raw.length, 5); i++) {
+      const joined = String(raw[i].join(" ")).toLowerCase();
+      if (/bbu|sl\s*\.?\s*no|equipment|uom|quantity|unit\s*price|basic\s*price|gst|total/i.test(joined)) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    const headerRow = raw[headerRowIndex];
+    const colMap = {};
+    headerRow.forEach((h, i) => {
+      const key = String(h || "").trim();
+      if (key) colMap[i] = key;
+    });
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (let r = headerRowIndex + 1; r < raw.length; r++) {
+      const rowArr = raw[r];
+      const hasVal = rowArr.some((v) => String(v || "").trim() !== "");
+      if (!hasVal) continue;
+
+      const rawObj = {};
+      for (let i = 0; i < headerRow.length; i++) {
+        if (colMap[i]) rawObj[colMap[i]] = rowArr[i] !== undefined ? rowArr[i] : "";
+      }
+
+      const mapped = mapBbuExcelRow(rawObj);
+      if (!mapped.name_equipment) {
+        skipped += 1;
+        continue;
+      }
+
+      await QaBbu.create({
+        qa_project_id,
+        bbu_sl_no: mapped.bbu_sl_no != null ? mapped.bbu_sl_no : String(inserted + 1),
+        bbu_item_sl_no: mapped.bbu_item_sl_no || null,
+        item_category: mapped.item_category || null,
+        name_equipment: mapped.name_equipment,
+        uom: mapped.uom,
+        quantity: mapped.quantity,
+        unit_price: mapped.unit_price,
+        basic_price: mapped.basic_price,
+        gst: mapped.gst,
+        gst_percent: mapped.gst_percent || null,
+        total_value: mapped.total_value,
+      });
+      inserted += 1;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `BBU Excel uploaded: ${inserted} entries created${skipped ? `, ${skipped} rows skipped` : ""}`,
+      data: { createdCount: inserted, skippedCount: skipped },
+    });
+  } catch (err) {
+    console.error("uploadQaBbuExcel error:", err);
+    return res.status(500).json({ success: false, message: "Failed to process BBU Excel", detail: err.message });
+  }
+};
+
+// ── QA MDCC ─────────────────────────────────────────────────────────────
+exports.getQaMdccByProject = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const rows = await QaMdcc.findAll({
+      where: { qa_project_id },
+      order: [["createdAt", "DESC"]],
+    });
+    return res.status(200).json({ success: true, data: rows });
+  } catch (err) {
+    console.error("getQaMdccByProject error:", err);
+    return res.status(500).json({ success: false, message: "Failed to load MDCC entries" });
+  }
+};
+
+exports.createQaMdcc = async (req, res) => {
+  try {
+    const { qa_project_id } = req.params;
+    const {
+      mdcc_no,
+      mdcc_date,
+      project_details,
+      rfb_details,
+      ca_no,
+      bbu_ref_no,
+      po_no,
+      loa_no,
+      contractor_name,
+      contractor_address,
+      bbu_sl_no,
+      bbu_item_sl_no,
+      item_material_description,
+      uom,
+      mt,
+      qty_as_per_bbu,
+      mdcc_issued_till_date,
+      mdcc_issued_for,
+      manufacturer,
+      inspect,
+      remarks,
+      mdcc_items,
+      inspected_by,
+      mandays,
+      uploaded_files,
+    } = req.body;
+
+    if (!mdcc_no || !mdcc_date) {
+      return res.status(400).json({ success: false, message: "MDCC No. and MDCC Date are required" });
+    }
+
+    const row = await QaMdcc.create({
+      qa_project_id,
+      mdcc_no,
+      mdcc_date,
+      project_details: project_details || null,
+      rfb_details: rfb_details || null,
+      ca_no: ca_no || null,
+      bbu_ref_no: bbu_ref_no || null,
+      po_no: po_no || null,
+      loa_no: loa_no || null,
+      contractor_name: contractor_name || null,
+      contractor_address: contractor_address || null,
+      bbu_sl_no: bbu_sl_no != null ? bbu_sl_no : null,
+      bbu_item_sl_no: bbu_item_sl_no != null ? bbu_item_sl_no : null,
+      item_material_description: item_material_description || null,
+      uom: uom || null,
+      mt: mt || null,
+      qty_as_per_bbu: qty_as_per_bbu != null ? qty_as_per_bbu : null,
+      mdcc_issued_till_date: mdcc_issued_till_date != null ? mdcc_issued_till_date : 0,
+      mdcc_issued_for: mdcc_issued_for || null,
+      manufacturer: manufacturer || null,
+      inspect: inspect || null,
+      remarks: remarks || null,
+      mdcc_items: mdcc_items || null,
+      inspected_by: inspected_by || null,
+      mandays: mandays || null,
+      uploaded_files: uploaded_files || null,
+    });
+
+    return res.status(201).json({ success: true, data: row, message: "MDCC entry added" });
+  } catch (err) {
+    console.error("createQaMdcc error:", err);
+    return res.status(500).json({ success: false, message: "Failed to add MDCC entry" });
+  }
+};
+
+exports.editQaMdcc = async (req, res) => {
+  try {
+    const { mdcc_id } = req.params;
+    const row = await QaMdcc.findByPk(mdcc_id);
+    if (!row) return res.status(404).json({ success: false, message: "MDCC entry not found" });
+
+    const fields = [
+      "mdcc_no",
+      "mdcc_date",
+      "project_details",
+      "rfb_details",
+      "ca_no",
+      "bbu_ref_no",
+      "po_no",
+      "loa_no",
+      "contractor_name",
+      "contractor_address",
+      "bbu_sl_no",
+      "bbu_item_sl_no",
+      "item_material_description",
+      "uom",
+      "mt",
+      "qty_as_per_bbu",
+      "mdcc_issued_till_date",
+      "mdcc_issued_for",
+      "manufacturer",
+      "inspect",
+      "remarks",
+      "mdcc_items",
+      "inspected_by",
+      "mandays",
+      "uploaded_files",
+    ];
+
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) row[f] = req.body[f];
+    });
+
+    await row.save();
+    return res.status(200).json({ success: true, data: row, message: "MDCC entry updated" });
+  } catch (err) {
+    console.error("editQaMdcc error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update MDCC entry" });
+  }
+};
+
+exports.deleteQaMdcc = async (req, res) => {
+  try {
+    const { mdcc_id } = req.params;
+    const row = await QaMdcc.findByPk(mdcc_id);
+    if (!row) return res.status(404).json({ success: false, message: "MDCC entry not found" });
+    await row.destroy();
+    return res.status(200).json({ success: true, message: "MDCC entry deleted" });
+  } catch (err) {
+    console.error("deleteQaMdcc error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete MDCC entry" });
+  }
+};
+
+// ── QA Summary ──────────────────────────────────────────────────────────
+exports.getQaSummary = async (req, res) => {
+  try {
+    const projects = await QaRegisteredProject.findAll({
+      include: [
+        {
+          model: QaBbu,
+          as: "bbus",
+          required: false,
+        },
+        {
+          model: QaMdcc,
+          as: "mdccs",
+          required: false,
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    let totalBbu = 0;
+    let totalMdcc = 0;
+    const counts = projects.map((p) => {
+      const bbuCount = (p.bbus || []).length;
+      const mdccCount = (p.mdccs || []).length;
+      totalBbu += bbuCount;
+      totalMdcc += mdccCount;
+      return {
+        project_name: p.project_name,
+        bbu_count: bbuCount,
+        mdcc_count: mdccCount,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        total_projects: projects.length,
+        total_bbu: totalBbu,
+        total_mdcc: totalMdcc,
+        per_project: counts,
+      },
+    });
+  } catch (err) {
+    console.error("getQaSummary error:", err);
+    return res.status(500).json({ success: false, message: "Failed to load QA summary" });
   }
 };

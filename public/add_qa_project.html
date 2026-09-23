@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register QA Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="./js/auth_guard.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #f4f6f9 0%, #e8ecf1 100%);
+      padding: 20px;
+      min-height: 100vh;
+      color: #333;
+    }
+    h1 { text-align: center; margin-bottom: 25px; color: #0b5ed7; font-weight: 700; font-size: 28px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .form-container {
+      max-width: 1000px; margin: auto; background: #ffffff;
+      padding: 35px 40px; border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 30px; }
+    .form-section { grid-column: span 2; margin-top: 10px; margin-bottom: 5px; padding-bottom: 8px; border-bottom: 2px solid #0b5ed7; color: #0b5ed7; font-weight: 600; font-size: 18px; }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 8px; display: flex; align-items: center; }
+    .required::after { content: " *"; color: #dc3545; }
+    input, textarea {
+      width: 100%; padding: 12px; font-size: 15px;
+      border: 1px solid #cfd4da; border-radius: 6px;
+      transition: all 0.3s; font-family: inherit;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #0b5ed7; box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.15); }
+    textarea { resize: vertical; min-height: 80px; }
+    .full-width { grid-column: span 2; }
+    .btn-group { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+    button, .btn-back {
+      padding: 12px 32px; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: all 0.3s; min-width: 140px;
+      text-decoration: none; display: inline-block; text-align: center;
+    }
+    .btn-submit {
+      background: linear-gradient(to right, #0b5ed7, #0a58ca);
+      color: #fff; box-shadow: 0 4px 6px rgba(11, 94, 215, 0.2);
+    }
+    .btn-submit:hover { background: linear-gradient(to right, #0a58ca, #0950b8); box-shadow: 0 6px 12px rgba(11, 94, 215, 0.3); transform: translateY(-2px); }
+    .btn-back {
+      background: linear-gradient(to right, #6c757d, #5c636a);
+      color: #fff; box-shadow: 0 4px 6px rgba(108, 117, 125, 0.2);
+    }
+    .btn-back:hover { background: linear-gradient(to right, #5c636a, #495057); box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3); transform: translateY(-2px); color: #fff; }
+    button:active, .btn-back:active { transform: translateY(0); }
+    .validation-summary { background-color: #f8d7da; color: #721c24; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #f5c6cb; display: none; }
+    .validation-summary ul { margin-left: 20px; }
+    @media (max-width: 768px) {
+      body { padding: 15px; }
+      .form-container { padding: 20px; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1><i class="bi bi-shield-check me-2"></i>Register QA Project</h1>
+    <p class="subtitle">Fill in the project details below to register a new QA project.</p>
+
+    <div class="validation-summary" id="validationSummary">
+      <ul id="validationErrors"></ul>
+    </div>
+
+    <form id="qaProjectForm">
+      <div class="form-section">Project Information</div>
+
+      <div class="form-group">
+        <label for="projectName" class="required">Project Name</label>
+        <input type="text" id="projectName" name="project_name" required placeholder="Enter project name" />
+      </div>
+
+      <div class="form-group">
+        <label for="projectDetails">Project Details</label>
+        <textarea id="projectDetails" name="project_details" rows="3" placeholder="Enter project details"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="rfbDetails">RfB/RfP Details</label>
+        <textarea id="rfbDetails" name="rfb_details" rows="3" placeholder="Enter RFB details"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="caNo">CA No.</label>
+        <input type="text" id="caNo" name="ca_no" placeholder="Enter CA No." />
+      </div>
+
+      <div class="form-group">
+        <label for="bbuNo">BBU No.</label>
+        <input type="text" id="bbuNo" name="bbu_no" placeholder="Enter BBU No." />
+      </div>
+
+      <div class="form-section">Contractor Information</div>
+
+      <div class="form-group">
+        <label for="contractorName">Contractor Name</label>
+        <input type="text" id="contractorName" name="contractor_name" placeholder="Enter contractor name" />
+      </div>
+
+      <div class="form-group">
+        <label for="contractorAddress">Contractor Address</label>
+        <textarea id="contractorAddress" name="contractor_address" rows="3" placeholder="Enter contractor address"></textarea>
+      </div>
+
+      <div class="btn-group">
+        <a href="/qa_external.html" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Back to QA Dashboard</a>
+        <button type="submit" class="btn-submit"><i class="bi bi-check2-square me-1"></i>Register Project</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script>
+    async function checkUserQaAccess() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return 'none';
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.role === 'admin') return 'head';
+        if (payload && payload.role === 'viewer') return 'view';
+        const userId = payload && payload.user_id;
+        if (!userId) return 'none';
+
+        const res = await authFetch(`/api/data/departments/user/${encodeURIComponent(userId)}`);
+        if (!res.ok) return 'edit';
+        const data = await res.json();
+        const list = Array.isArray(data.departments) ? data.departments : [];
+        const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        for (const deptInfo of list) {
+          const id = (deptInfo && (deptInfo.dept_id || deptInfo)) || null;
+          if (!id) continue;
+          const deptRes = await authFetch(`/api/data/departments/${encodeURIComponent(id)}`);
+          if (!deptRes.ok) continue;
+          const dept = await deptRes.json();
+          if (!dept || !dept.dept_name) continue;
+          const normName = norm(dept.dept_name);
+          if (normName.includes('qa') || normName.includes('quality')) {
+            const raw = String((deptInfo && deptInfo.access_level) || '').trim().toLowerCase();
+            if (raw === 'view' || raw === 'edit' || raw === 'head') return raw;
+            return (deptInfo && deptInfo.can_edit === true) ? 'edit' : 'view';
+          }
+        }
+        return 'edit';
+      } catch(e) {
+        return 'edit';
+      }
+    }
+
+    $(document).ready(async function () {
+      const accessLevel = await checkUserQaAccess();
+      if (accessLevel === 'view' || accessLevel === 'none') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Access Restricted',
+          text: 'You do not have permission to register a new QA project.'
+        }).then(() => {
+          window.location.href = '/qa_external.html';
+        });
+        return;
+      }
+
+      $('#qaProjectForm').on('submit', function (e) {
+        e.preventDefault();
+        const formData = {
+          project_name: $('#projectName').val().trim(),
+          project_details: $('#projectDetails').val().trim(),
+          rfb_details: $('#rfbDetails').val().trim(),
+          ca_no: $('#caNo').val().trim(),
+          bbu_no: $('#bbuNo').val().trim(),
+          contractor_name: $('#contractorName').val().trim(),
+          contractor_address: $('#contractorAddress').val().trim(),
+        };
+
+        if (!formData.project_name) {
+          showValidation('Project Name is required.');
+          return;
+        }
+
+        hideValidation();
+
+        authFetch('/api/data/qa/project/add', {
+          method: 'POST',
+          body: JSON.stringify(formData),
+        })
+          .then((res) => res.json())
+          .then((resObj) => {
+            if (resObj.success) {
+              Swal.fire({ icon: 'success', title: 'Success', text: 'QA project registered successfully!' }).then(() => {
+                window.location.href = '/qa_external.html';
+              });
+            } else {
+              showValidation(resObj.message || 'Failed to register project.');
+            }
+          })
+          .catch((err) => {
+            console.error('Error registering project:', err);
+            showValidation('An error occurred. Please try again.');
+          });
+      });
+
+      function showValidation(msg) {
+        const summary = $('#validationSummary');
+        const errors = $('#validationErrors');
+        errors.html('<li>' + msg + '</li>');
+        summary.show();
+        $('html, body').animate({ scrollTop: 0 }, 300);
+      }
+
+      function hideValidation() {
+        $('#validationSummary').hide();
+      }
+    });
+
+    function authFetch(url, options = {}) {
+      const token = localStorage.getItem('token');
+      if (!token) { window.location.href = '/'; return Promise.reject('No token'); }
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      return fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
+        .then((res) => {
+          if (res.status === 401) { localStorage.clear(); window.location.href = '/'; return Promise.reject('Unauthorized'); }
+          return res;
+        });
+    }
+  </script>
+</body>
+</html>

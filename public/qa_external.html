@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QA Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --light-bg: #f8f9fa;
+      --border-color: #dee2e6;
+      --bg-page: #f5f7fa;
+      --bg-card: #ffffff;
+      --border: #dee2e6;
+      --accent: #3498db;
+      --text: #333;
+      --text-muted: #666;
+    }
+    body {
+      background-color: var(--bg-page);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+    }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), #34495e);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .page-header h2 { margin: 0; font-weight: 600; font-size: 1.4rem; }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
+    }
+    .card-body { padding: 1.25rem; }
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 1rem;
+    }
+    .table thead th {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.65rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+      position: sticky;
+      top: 0;
+      white-space: nowrap;
+    }
+    .table tbody td {
+      padding: 0.5rem 0.75rem;
+      vertical-align: middle;
+      border-color: var(--border-color);
+      font-size: 0.875rem;
+    }
+
+    .table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(52, 152, 219, 0.05);
+    }
+
+    .table tbody td .btn-sm {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-action-group { display: flex; gap: 0.3rem; flex-wrap: nowrap; }
+    .btn-sm {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      border-radius: 6px;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .btn-sm:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .btn-info { background-color: #17a2b8; border-color: #17a2b8; }
+    .btn-warning { background-color: var(--warning-color); border-color: var(--warning-color); color: white; }
+    .btn-warning:hover { background-color: #d68910; }
+    .btn-danger { background-color: var(--danger-color); border-color: var(--danger-color); }
+    .btn-danger:hover { background-color: #c0392b; }
+    .btn-success { background-color: var(--success-color); border-color: var(--success-color); }
+    .btn-outline-primary { border: 1px solid var(--secondary-color); color: var(--secondary-color); background: transparent; }
+    .btn-outline-primary:hover { background: var(--secondary-color); color:#fff; }
+    .search-container { position: relative; max-width: 280px; }
+    .search-container .form-control {
+      border-radius: 20px;
+      padding-left: 2.2rem;
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
+      font-size: 0.875rem;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+    .search-container .form-control:focus {
+      box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+      border-color: var(--secondary-color);
+    }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d; }
+    .modal-header { background-color: var(--primary-color); color: white; border-radius: 10px 10px 0 0; }
+    .modal-footer { border-top: 1px solid var(--border); }
+    .form-label { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 8px; }
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #cfd4da;
+      border-radius: 6px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .form-control:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25); }
+    textarea.form-control { resize: vertical; }
+    .text-wrap { white-space: normal; word-break: break-word; }
+    .no-data { text-align: center; padding: 3rem; color: #6c757d; }
+    .no-data i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    .no-data h5 { margin-top: 1rem; }
+
+    .modal-content {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    /* Nested / expanded tables */
+    .bbu-row > td, .mdcc-row > td { background: #f8fafc; padding: 0 !important; }
+    .nested-shell { padding: 1rem 1.25rem; border-left: 4px solid var(--primary-color); }
+    .nested-table { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+    .nested-table table { margin: 0; min-width: 900px; }
+    .nested-table thead th {
+      background-color: #2c3e50; color: #fff; font-size: 0.75rem;
+      padding: 0.5rem 0.6rem; white-space: nowrap; font-weight: 600;
+    }
+    .nested-table tbody td { font-size: 0.8rem; padding: 0.4rem 0.6rem; white-space: nowrap; }
+    .mdcc-section { background: #eef2f7; }
+    .mdcc-section thead th { background-color: #1a5276; }
+    .bdg-alt { background:#17a2b8; }
+
+    /* Global loader */
+    #globalLoader {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.75); z-index: 10000;
+      display: none; align-items: center; justify-content: center; flex-direction: column;
+    }
+    .spinner { width: 48px; height: 48px; border: 5px solid var(--border); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="globalLoader">
+    <div class="spinner"></div>
+    <p class="mt-2 text-muted">Loading...</p>
+  </div>
+
+  <div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h2>QA Dashboard</h2>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/business_development_external.html" class="btn btn-outline-light"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <button class="btn btn-light text-primary" id="registerProjectBtn"><i class="bi bi-plus-circle me-1"></i>Register Project</button>
+      </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+          <div class="search-container w-100 w-md-auto">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="tableSearch" class="form-control" placeholder="Search projects..." />
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary" id="refreshBtn" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn btn-sm btn-outline-secondary" id="exportBtn"><i class="bi bi-download"></i> Export</button>
+            <button class="btn btn-sm btn-outline-success" id="exportAllBtn"><i class="bi bi-download"></i> Export All Project</button>
+          </div>
+        </div>
+        <div class="table-container" id="tableContainer">
+          <div class="no-data"><i class="bi bi-inbox"></i><h5>No projects registered yet</h5><p>Click "Register Project" to add your first QA project.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register / Edit Project Modal -->
+  <div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="projectModalTitle">Register Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="projectForm">
+            <div class="mb-3">
+              <label class="form-label">Project Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="p_project_name" required placeholder="Enter project name" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Project Details</label>
+              <textarea class="form-control" id="p_project_details" rows="2" placeholder="Enter project details"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">RFB Details</label>
+              <textarea class="form-control" id="p_rfb_details" rows="2" placeholder="Enter RFB details"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">CA No.</label>
+                <input type="text" class="form-control" id="p_ca_no" placeholder="Enter CA No." />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">BBU No.</label>
+                <input type="text" class="form-control" id="p_bbu_no" placeholder="Enter BBU No." />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">PO No.</label>
+                <input type="text" class="form-control" id="p_po_no" placeholder="Enter PO No." />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">LA No.</label>
+                <input type="text" class="form-control" id="p_la_no" placeholder="Enter LA No." />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contractor Name</label>
+                <input type="text" class="form-control" id="p_contractor_name" placeholder="Enter contractor name" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Contractor Address</label>
+                <textarea class="form-control" id="p_contractor_address" rows="2" placeholder="Enter contractor address"></textarea>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">MDCC NO.</label>
+              <input type="text" class="form-control" id="p_mdcc_no" placeholder="Enter MDCC No." />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveProjectBtn"><i class="bi bi-check2-square me-1"></i>Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit BBU Item Modal -->
+  <div class="modal fade" id="bbuModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bbuModalTitle">Add BBU Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="bbuForm">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">BBU SL No</label>
+                <input type="number" class="form-control" id="b_bbu_sl_no" />
+              </div>
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Name Equipment <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="b_name_equipment" required />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">U.O.M</label>
+                <input type="text" class="form-control" id="b_uom" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" step="any" class="form-control" id="b_quantity" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Unit Price</label>
+                <input type="number" step="any" class="form-control" id="b_unit_price" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Item Category</label>
+                <input type="text" class="form-control" id="b_item_category" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">GST %</label>
+                <input type="text" class="form-control" id="b_gst_percent" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Basic Price</label>
+                <input type="number" step="any" class="form-control" id="b_basic_price" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">GST</label>
+                <input type="number" step="any" class="form-control" id="b_gst" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Total Value</label>
+                <input type="number" step="any" class="form-control" id="b_total_value" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveBbuBtn"><i class="bi bi-check2-square me-1"></i>Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit MDCC Item Modal -->
+  <div class="modal fade" id="mdccModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="mdccModalTitle">Add MDCC Entry</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="mdccForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">MDCC No <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="m_mdcc_no" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">MDCC Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="m_mdcc_date" required />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">BBU SL. NO.</label>
+                <input type="number" class="form-control" id="m_bbu_sl_no" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">BBU ITEM SL. NO.</label>
+                <input type="number" class="form-control" id="m_bbu_item_sl_no" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">UoM</label>
+                <input type="text" class="form-control" id="m_uom" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">ITEM / MATERIAL DESCRIPTION</label>
+              <textarea class="form-control" id="m_item_material_description" rows="2"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">QTY (As Per BBU)</label>
+                <input type="number" step="any" class="form-control" id="m_qty_as_per_bbu" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">MDCC Issued Till Date</label>
+                <input type="number" class="form-control" id="m_mdcc_issued_till_date" value="0" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">MT</label>
+                <input type="text" class="form-control" id="m_mt" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">MDCC Issued For</label>
+                <input type="text" class="form-control" id="m_mdcc_issued_for" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">MANUFACTURER</label>
+                <input type="text" class="form-control" id="m_manufacturer" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">INSPECT</label>
+                <input type="text" class="form-control" id="m_inspect" placeholder="e.g. Passed, Pending" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Remarks</label>
+                <input type="text" class="form-control" id="m_remarks" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Inspect - Upload Excel</label>
+                <input type="file" class="form-control" id="m_excel_file" accept=".xlsx,.xls,.csv" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Inspect - Upload PDF</label>
+                <input type="file" class="form-control" id="m_pdf_file" accept="application/pdf" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveMdccBtn"><i class="bi bi-check2-square me-1"></i>Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload BBU Excel Modal -->
+  <div class="modal fade" id="uploadExcelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-cloud-arrow-up me-2"></i>Upload BBU Excel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Choose Excel File (.xlsx / .xls)</label>
+            <input type="file" class="form-control" id="bbuExcelFile" accept=".xlsx,.xls" />
+            <div class="form-text mt-2">
+              Expected columns: BBU SL. NO., Name Equipment, U.O.M, Quantity, Unit Price, Basic Price, GST, Total Value.
+            </div>
+          </div>
+          <div class="text-muted small" id="uploadStatus"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="uploadBbuBtn"><i class="bi bi-upload me-1"></i>Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // ── Auth fetch wrapper (JSON) ──────────────────────────────
+    function authFetch(url, options = {}) {
+      const token = localStorage.getItem("token");
+      if (!token) { window.location.href = "/"; return Promise.reject("No token found"); }
+      const defaultHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+      return fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } })
+        .then((res) => {
+          if (res.status === 401) {
+            localStorage.clear(); window.location.href = "/"; throw new Error("Unauthorized");
+          }
+          return res;
+        });
+    }
+
+    // ── File upload fetch wrapper (multipart) ──────────────────
+    function uploadFetch(url, formData) {
+      const token = localStorage.getItem("token");
+      if (!token) { window.location.href = "/"; return Promise.reject("No token found"); }
+      return fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData })
+        .then((res) => {
+          if (res.status === 401) { window.location.href = "/"; throw new Error("Unauthorized"); }
+          return res.json();
+        });
+    }
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "-";
+      try {
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return dateString;
+        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      } catch { return dateString; }
+    }
+
+    function numOrDash(v) {
+      if (v === null || v === undefined || v === '') return '-';
+      return v;
+    }
+
+    const GlobalLoader = {
+      show: () => { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; },
+      hide: () => { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
+    };
+
+    // ── Handle project ID from URL parameters ────────────────────
+    $(document).ready(function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project_id');
+      const projectName = urlParams.get('project_name') || '';
+
+      if (projectId) {
+        $('#projectId').val(projectId);
+        $('#projectNameDisplay').text(decodeURIComponent(projectName));
+        loadProjectDetails(projectId);
+      }
+      // If no project_id in URL, just show the full dashboard with project list
+      // initializePage() is called separately and will fetch all projects
+    });
+
+    // ── State ──────────────────────────────────────────────────
+    let allProjects = [];
+    let currentBbuContext = null;   // { projectId, button }
+    let currentMdccContext = null;  // { projectId, bbuId, bbuSlNo, button }
+    let bbuCache = {};              // projectId -> bbu rows
+    let mdccCache = {};             // projectId -> mdcc rows
+    let editingProjectId = null;
+    let bbuModalProjectId = null;   // project used for BBU add
+    let editingBbuId = null;
+    let mdccModalProjectId = null;  // project used for MDCC add
+    let editingMdccId = null;
+    let uploadProjectId = null;
+
+    let userQaAccessLevel = 'edit';
+
+    async function checkUserQaAccess() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return 'none';
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.role === 'admin') return 'head';
+        if (payload && payload.role === 'viewer') return 'view';
+        const userId = payload && payload.user_id;
+        if (!userId) return 'none';
+
+        const res = await authFetch(`/api/data/departments/user/${encodeURIComponent(userId)}`);
+        if (!res.ok) return 'edit';
+        const data = await res.json();
+        const list = Array.isArray(data.departments) ? data.departments : [];
+        const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        for (const deptInfo of list) {
+          const id = (deptInfo && (deptInfo.dept_id || deptInfo)) || null;
+          if (!id) continue;
+          const deptRes = await authFetch(`/api/data/departments/${encodeURIComponent(id)}`);
+          if (!deptRes.ok) continue;
+          const dept = await deptRes.json();
+          if (!dept || !dept.dept_name) continue;
+          const normName = norm(dept.dept_name);
+          if (normName.includes('qa') || normName.includes('quality')) {
+            const raw = String((deptInfo && deptInfo.access_level) || '').trim().toLowerCase();
+            if (raw === 'view' || raw === 'edit' || raw === 'head') return raw;
+            return (deptInfo && deptInfo.can_edit === true) ? 'edit' : 'view';
+          }
+        }
+        return 'edit';
+      } catch(e) {
+        return 'edit';
+      }
+    }
+
+    function applyQaAccessUI() {
+      if (userQaAccessLevel === 'view' || userQaAccessLevel === 'none') {
+        $('#registerProjectBtn').hide();
+        $('.edit-project-btn, .delete-project-btn').hide();
+        $('.add-item-btn, #addBbuBtn, .upload-excel-btn, #uploadBbuBtn, #uploadExcelBtn').hide();
+        $('.add-mdcc-btn, .edit-mdcc-btn, .delete-mdcc-btn').hide();
+        $('button:contains("Upload Excel"), button:contains("Add Item"), button:contains("Add MDCC")').hide();
+      }
+    }
+
+    // ── Initialise ─────────────────────────────────────────────
+    $(document).ready(function () { initializePage(); });
+
+    async function initializePage() {
+      userQaAccessLevel = await checkUserQaAccess();
+      fetchQaProjects();
+      setupEventListeners();
+      applyQaAccessUI();
+    }
+
+    function setupEventListeners() {
+      $('#tableSearch').on('keyup', function () {
+        const value = this.value.toLowerCase();
+        $('#qaTable tbody tr[data-project-id]').each(function () {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+      });
+      $('#refreshBtn').on('click', fetchQaProjects);
+      $('#exportBtn').on('click', exportToCSV);
+      $('#exportAllBtn').on('click', exportAllProjectData);
+      $('#registerProjectBtn').on('click', function () { openProjectModal(null); });
+      $('#saveProjectBtn').on('click', saveProjectModal);
+
+      $('#saveBbuBtn').on('click', saveBbuModal);
+      $('#saveMdccBtn').on('click', saveMdccModal);
+
+      $('#uploadBbuBtn').on('click', handleUpload);
+      $('#bbuExcelFile').on('change', function () {
+        $('#uploadStatus').text(this.files && this.files[0] ? `Selected: ${this.files[0].name}` : '');
+      });
+    }
+
+    function fetchQaProjects() {
+      GlobalLoader.show();
+      authFetch("/api/data/qa/projects/all")
+        .then(res => res.json())
+        .then(resObj => {
+          if (resObj.success) { allProjects = resObj.data || []; renderDataTable(allProjects); }
+          else throw new Error(resObj.message || "Failed to load projects");
+        })
+        .catch(err => { console.error("Error fetching QA projects:", err); Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load projects.' }); })
+        .finally(() => GlobalLoader.hide());
+    }
+
+    // ── Main projects table ────────────────────────────────────
+    function renderDataTable(items) {
+      const container = $("#tableContainer");
+      container.empty();
+      if (!Array.isArray(items) || items.length === 0) {
+        container.html('<div class="no-data"><i class="bi bi-inbox"></i><h5>No projects registered yet</h5><p>Click "Register Project" to add your first QA project.</p></div>');
+        return;
+      }
+      const table = $(`
+        <table class="table table-hover" id="qaTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Project Name</th>
+              <th>Project Details</th>
+              <th>RfB/RfPDetails</th>
+              <th>CA No.</th>
+              <th>BBU No.</th>
+              <th>Contractor Name</th>
+              <th>Contractor Address</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((item, index) => `
+              <tr data-project-id="${item.qa_project_id}">
+                <td>${index + 1}</td>
+                <td><strong>${escapeHtml(item.project_name || '')}</strong></td>
+                <td class="text-wrap" style="max-width:180px">${escapeHtml(item.project_details || '-')}</td>
+                <td class="text-wrap" style="max-width:180px">${escapeHtml(item.rfb_details || '-')}</td>
+                <td>${escapeHtml(item.ca_no || '-')}</td>
+                <td>${escapeHtml(item.bbu_no || '-')}</td>
+                <td>${escapeHtml(item.contractor_name || '-')}</td>
+                <td class="text-wrap" style="max-width:150px">${escapeHtml(item.contractor_address || '-')}</td>
+                <td>
+                  <div class="btn-action-group">
+                    <button class="btn btn-sm btn-info bbu-toggle-btn" data-project-id="${item.qa_project_id}">
+                      BBU
+                    </button>
+                    <button class="btn btn-sm btn-outline-success export-project-btn" data-project-id="${item.qa_project_id}" data-project-name="${escapeHtml(item.project_name || '')}" title="Export BBU + MDCC">
+                      <i class="bi bi-download"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning edit-project-btn" data-project-id="${item.qa_project_id}" title="Edit Project">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-project-btn" data-project-id="${item.qa_project_id}" title="Delete Project">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `);
+      container.append(table);
+
+      table.find('.bbu-toggle-btn').on('click', function (e) {
+        e.stopPropagation();
+        const projectId = $(this).data('project-id');
+        toggleBbu(projectId, this);
+      });
+      table.find('.edit-project-btn').on('click', function (e) {
+        e.stopPropagation();
+        const id = $(this).data('project-id');
+        const project = allProjects.find(p => p.qa_project_id === id);
+        openProjectModal(project || null);
+      });
+      table.find('.delete-project-btn').on('click', function (e) {
+        e.stopPropagation();
+        const id = $(this).data('project-id');
+        deleteProject(id);
+      });
+      table.find('.export-project-btn').on('click', function (e) {
+        e.stopPropagation();
+        const id = $(this).data('project-id');
+        const name = $(this).data('project-name') || 'project';
+        exportProjectData(id, name);
+      });
+      // Click on row (not buttons) to view project details
+      table.find('tbody tr[data-project-id]').on('click', function () {
+        const projectId = $(this).data('project-id');
+        const project = allProjects.find(p => p.qa_project_id === projectId);
+        if (project) {
+          const url = `/qa_external.html?project_id=${projectId}&project_name=${encodeURIComponent(project.project_name)}`;
+          window.location.href = url;
+        }
+      });
+      applyQaAccessUI();
+    }
+
+    async function exportProjectData(projectId, projectName) {
+      try {
+        GlobalLoader.show();
+        const [bbuRes, mdccRes] = await Promise.all([
+          authFetch(`/api/data/qa/project/${projectId}/bbu/all`).then(r => r.json()),
+          authFetch(`/api/data/qa/project/${projectId}/mdcc/all`).then(r => r.json())
+        ]);
+        const bbus = bbuRes.data || [];
+        const mdccs = mdccRes.data || [];
+
+        const bbuMap = {};
+        bbus.forEach(b => {
+          const k1 = String(b.bbu_item_sl_no || '').trim();
+          const k2 = String(b.bbu_sl_no || '').trim();
+          if (k1) bbuMap[k1] = b;
+          if (k2) bbuMap[k2] = b;
+        });
+
+        function parseRemarksData(rawRemarks) {
+          const defaultPoints = [
+            "Aforementioned item(s) are hereby cleared for dispatch to site, as per the terms & conditions of the RfB/CA cited.",
+            "Transhipment of consignment shall not be allowed.",
+            "This dispatch clearance and hold point/s (if any) however do not relieve the Contractor from any of the responsibilities mentioned in the RfB/CA including amendments, clarifications and addendums.",
+            "SECI keeps the right to inspect the material/s at site as well, as and when required."
+          ];
+
+          if (!rawRemarks) {
+            const addComments = defaultPoints.map(c => `# ${c}`).join('\n');
+            return { inspect: '', name: '', title: '', additionalComments: addComments };
+          }
+
+          let inspect = rawRemarks;
+          let name = '';
+          let title = '';
+          let userPoints = [];
+
+          if (rawRemarks.includes('---SIGNAME---')) {
+            const sigParts = rawRemarks.split('---SIGNAME---');
+            inspect = sigParts[0].trim();
+            const restParts = sigParts[1] ? sigParts[1].split('---CONDITIONS---') : [''];
+            const sigBlock = restParts[0].trim();
+            if (sigBlock.includes(' | ')) {
+              const sp = sigBlock.split(' | ');
+              name = sp[0].trim();
+              title = sp[1].trim();
+            } else {
+              name = sigBlock.trim();
+            }
+
+            if (restParts[1]) {
+              try {
+                userPoints = JSON.parse(restParts[1].trim());
+                if (!Array.isArray(userPoints)) userPoints = [];
+              } catch(e) {}
+            }
+          }
+
+          const allPoints = [...defaultPoints, ...userPoints];
+          const additionalComments = allPoints.map(c => `# ${c}`).join('\n');
+
+          return { inspect, name, title, additionalComments };
+        }
+
+        function esc(val) {
+          if (val == null) return '';
+          return String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        const headers = [
+          'MDCC No', 'MDCC Date', 'BBU SL NO', 'BBU Item SL NO', 'Item Category',
+          'Item/Material Description', 'UoM', 'Qty As Per BBU',
+          'MDCC Issued Till Date', 'MDCC Issued For',
+          'Manufacturer', 'Inspect / Remarks', 'Inspected By', 'No. of ManDays',
+          'Name', 'Designation', 'Additional Comments'
+        ];
+
+        let tableRows = [];
+        const runningIssuedMap = {};
+
+        // Sort MDCC entries chronologically by date
+        mdccs.sort((a, b) => {
+          const dA = new Date(a.mdcc_date || 0).getTime();
+          const dB = new Date(b.mdcc_date || 0).getTime();
+          if (dA !== dB) return dA - dB;
+          return Number(a.mdcc_id || 0) - Number(b.mdcc_id || 0);
+        });
+
+        mdccs.forEach(m => {
+          const parsed = parseRemarksData(m.remarks);
+          let items = [];
+          if (m.mdcc_items) {
+            try { items = JSON.parse(m.mdcc_items); } catch(e) {}
+          }
+
+          if (Array.isArray(items) && items.length > 0) {
+            items.forEach(it => {
+              const itemDesc = String(it.item_description || '').trim();
+              if (!itemDesc || itemDesc === '--' || itemDesc.toLowerCase() === 'select item/material description') {
+                return;
+              }
+              const itemSl = String(it.bbu_item_sl_no || '').trim();
+              const itemKey = itemSl || itemDesc.toLowerCase();
+              const matchedBbu = bbuMap[itemSl] || bbuMap[String(m.bbu_sl_no || '').trim()] || {};
+
+              const currentTillDate = runningIssuedMap[itemKey] || 0;
+              const currentIssuedFor = Number(it.mdcc_issued_for) || 0;
+              runningIssuedMap[itemKey] = currentTillDate + currentIssuedFor;
+
+              tableRows.push([
+                m.mdcc_no || '',
+                m.mdcc_date ? new Date(m.mdcc_date).toLocaleDateString('en-GB') : '',
+                (m.bbu_sl_no || '').toString(),
+                (it.bbu_item_sl_no || '').toString(),
+                matchedBbu.item_category || '',
+                it.item_description || '',
+                it.uom || '',
+                it.qty_as_per_bbu != null ? it.qty_as_per_bbu : '',
+                currentTillDate,
+                it.mdcc_issued_for || '',
+                it.manufacturer || m.manufacturer || '',
+                (parsed.inspect || '').replace(/\n/g, ' '),
+                m.inspected_by || '',
+                m.mandays || '',
+                parsed.name || '',
+                parsed.title || '',
+                parsed.additionalComments || ''
+              ]);
+            });
+          } else {
+            const itemDesc = String(m.item_material_description || '').trim();
+            if (!itemDesc || itemDesc === '--' || itemDesc.toLowerCase() === 'select item/material description') {
+              return;
+            }
+            const itemSl = String(m.bbu_item_sl_no || m.bbu_sl_no || '').trim();
+            const itemKey = itemSl || itemDesc.toLowerCase();
+            const matchedBbu = bbuMap[itemSl] || {};
+
+            const currentTillDate = runningIssuedMap[itemKey] || 0;
+            const currentIssuedFor = Number(m.mdcc_issued_for) || 0;
+            runningIssuedMap[itemKey] = currentTillDate + currentIssuedFor;
+
+            tableRows.push([
+              m.mdcc_no || '',
+              m.mdcc_date ? new Date(m.mdcc_date).toLocaleDateString('en-GB') : '',
+              (m.bbu_sl_no || '').toString(),
+              (m.bbu_item_sl_no || '').toString(),
+              matchedBbu.item_category || '',
+              m.item_material_description || '',
+              m.uom || '',
+              m.qty_as_per_bbu != null ? m.qty_as_per_bbu : '',
+              currentTillDate,
+              m.mdcc_issued_for || '',
+              m.manufacturer || '',
+              (parsed.inspect || '').replace(/\n/g, ' '),
+              m.inspected_by || '',
+              m.mandays || '',
+              parsed.name || '',
+              parsed.title || '',
+              parsed.additionalComments || ''
+            ]);
+          }
+        });
+
+        // Build HTML table for Excel
+        let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>${esc(projectName)}_MDCC</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  td, th { mso-number-format:'\\@'; white-space: nowrap; padding: 4px 8px; vertical-align: top; }
+  th { background-color: #1a9e8f; color: #ffffff; font-weight: bold; font-size: 12pt; }
+  td { font-size: 11pt; }
+</style>
+</head><body>
+<table border="1" cellpadding="4" cellspacing="0">
+<thead><tr>`;
+
+        headers.forEach(h => { html += `<th>${esc(h)}</th>`; });
+        html += `</tr></thead><tbody>`;
+
+        tableRows.forEach(row => {
+          html += '<tr>';
+          row.forEach(cell => { html += `<td>${esc(cell).replace(/\n/g, '<br>')}</td>`; });
+          html += '</tr>';
+        });
+
+        html += `</tbody></table></body></html>`;
+
+        const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${projectName}_MDCC_Export.xls`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      } catch (err) {
+        console.error('Export error:', err);
+        Swal.fire({ icon: 'error', title: 'Export Failed', text: err.message || 'Failed to export data.' });
+      } finally {
+        GlobalLoader.hide();
+      }
+    }
+
+    // ── BBU dropdown (expanded row) ────────────────────────────
+    function toggleBbu(projectId, button) {
+      const $button = $(button);
+      const $row = $button.closest('tr');
+      if ($row.next().hasClass('bbu-row')) {
+        closeNested();
+        return;
+      }
+      closeNested(); // close any other open dropdowns
+      GlobalLoader.show();
+      authFetch(`/api/data/qa/project/${projectId}/bbu/all`)
+        .then(res => res.json())
+        .then(resObj => {
+          const bbus = resObj.data || [];
+          bbuCache[projectId] = bbus;
+          const html = createBbuHtml(bbus, projectId);
+          const bbuRow = $(`<tr class="bbu-row"><td colspan="10" class="nested-section">${html}</td></tr>`);
+          $row.after(bbuRow);
+          $button.html('Hide BBU');
+          currentBbuContext = { projectId, button };
+          bindBbuSectionEvents(bbuRow, projectId);
+          applyQaAccessUI();
+        })
+        .catch(err => { console.error("Error loading BBU:", err); Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load BBU entries.' }); })
+        .finally(() => GlobalLoader.hide());
+    }
+
+    function formatGstPercent(v) {
+      if (v === null || v === undefined || v === '') return '-';
+      const s = String(v).trim();
+      if (s === '' || s === '-') return '-';
+      const num = parseFloat(s);
+      if (isNaN(num)) return s.includes('%') ? s : `${s}%`;
+      const formatted = num.toFixed(2);
+      return s.includes('%') ? `${formatted}%` : `${formatted}%`;
+    }
+
+    function createBbuHtml(bbus, projectId) {
+      let rows = bbus.map((bbu, index) => `
+        <tr data-bbu-id="${bbu.bbu_id}">
+          <td>${index + 1}</td>
+          <td>${numOrDash(bbu.bbu_sl_no)}</td>
+          <td>${escapeHtml(bbu.item_category || '-')}</td>
+          <td><strong>${escapeHtml(bbu.name_equipment || '')}</strong></td>
+          <td>${escapeHtml(bbu.uom || '-')}</td>
+          <td>${numOrDash(bbu.quantity)}</td>
+          <td>${numOrDash(bbu.unit_price)}</td>
+          <td>${numOrDash(bbu.basic_price)}</td>
+          <td>${formatGstPercent(bbu.gst_percent)}</td>
+          <td>${numOrDash(bbu.gst)}</td>
+          <td>${numOrDash(bbu.total_value)}</td>
+          <td>
+            <div class="btn-action-group">
+              <button class="btn btn-sm btn-info mdcc-toggle-btn" data-project-id="${projectId}" data-bbu-id="${bbu.bbu_id}" data-bbu-sl-no="${bbu.bbu_sl_no ?? ''}" title="MDCC details">
+                <i class="bi bi-journal-text"></i> MDCC
+              </button>
+              <button class="btn btn-sm btn-warning edit-bbu-btn" data-bbu-id="${bbu.bbu_id}" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-danger delete-bbu-btn" data-bbu-id="${bbu.bbu_id}" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (!rows) {
+        rows = '<tr><td colspan="12" class="text-center text-muted py-3"><i class="bi bi-inbox me-2"></i>No BBU items yet. Upload Excel or add an item.</td></tr>';
+      }
+
+      let uploadDateBadge = '';
+      if (bbus && bbus.length > 0) {
+        const firstBbu = bbus[0];
+        const rawDate = firstBbu.created_at || firstBbu.createdAt;
+        if (rawDate) {
+          const d = new Date(rawDate);
+          if (!isNaN(d.getTime())) {
+            const formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            uploadDateBadge = `<span class="badge bg-light text-dark border fw-normal" style="font-size: 12px;"><i class="bi bi-calendar-event me-1 text-primary"></i>Excel Uploaded: ${formattedDate}</span>`;
+          }
+        }
+      }
+
+      return `
+        <div>
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <h5 class="mb-0">BBU Information</h5>
+              ${uploadDateBadge}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control bbu-search-input" placeholder="Search equipment name..." />
+              </div>
+              <button class="btn btn-sm btn-outline-primary upload-bbu-btn" data-project-id="${projectId}">
+                <i class="bi bi-cloud-arrow-up me-1"></i>Upload Excel
+              </button>
+            </div>
+          </div>
+          <div class="nested-table">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>SL. NO.</th>
+                  <th>BBU SL NO.</th>
+                  <th>Item Category</th>
+                  <th>Name Equipment</th>
+                  <th>U.O.M</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Basic Price</th>
+                  <th>GST %</th>
+                  <th>GST</th>
+                  <th>Total Value</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindBbuSectionEvents($section, projectId) {
+      $section.find('.bbu-search-input').on('keyup input', function () {
+        const query = $(this).val().toLowerCase().trim();
+        $section.find('tbody tr[data-bbu-id]').each(function () {
+          const equipName = $(this).find('td:nth-child(4)').text().toLowerCase();
+          const itemCat = $(this).find('td:nth-child(3)').text().toLowerCase();
+          const bbuSl = $(this).find('td:nth-child(2)').text().toLowerCase();
+          const matches = !query || equipName.includes(query) || itemCat.includes(query) || bbuSl.includes(query);
+          $(this).toggle(matches);
+        });
+      });
+      $section.find('.upload-bbu-btn').on('click', function () {
+        uploadProjectId = projectId;
+        $('#bbuExcelFile').val('');
+        $('#uploadStatus').text('');
+        new bootstrap.Modal(document.getElementById('uploadExcelModal')).show();
+      });
+      $section.find('.mdcc-toggle-btn').on('click', function () {
+        const bbuId = $(this).data('bbu-id');
+        const bbuSlNo = $(this).data('bbu-sl-no');
+        toggleMdcc(projectId, bbuId, bbuSlNo, this);
+      });
+      $section.find('.edit-bbu-btn').on('click', function () {
+        const bbuId = $(this).data('bbu-id');
+        const bbu = (bbuCache[projectId] || []).find(b => b.bbu_id === bbuId);
+        bbuModalProjectId = projectId;
+        editingBbuId = bbuId;
+        openBbuModal(bbu);
+      });
+      $section.find('.delete-bbu-btn').on('click', function () {
+        const bbuId = $(this).data('bbu-id');
+        deleteBbu(bbuId, projectId);
+      });
+    }
+
+    // ── MDCC dropdown (nested inside BBU row) ──────────────────
+    function toggleMdcc(projectId, bbuId, bbuSlNo, button) {
+      const $button = $(button);
+      const $bbuRow = $button.closest('tr');
+      if ($bbuRow.next().hasClass('mdcc-row')) {
+        $bbuRow.next().remove();
+        $button.html('<i class="bi bi-journal-text"></i> MDCC');
+        currentMdccContext = null;
+        return;
+      }
+      closeAllMdccRows();
+      GlobalLoader.show();
+      fetchMdcc(projectId)
+        .then(() => {
+          const bbu = (bbuCache[projectId] || []).find(b => String(b.bbu_id) === String(bbuId) || String(b.bbu_sl_no) === String(bbuSlNo));
+          const displayRows = getMatchingMdccDisplayRows(mdccCache[projectId] || [], bbu || { bbu_sl_no: bbuSlNo });
+          const html = createMdccHtml(displayRows, projectId, bbuSlNo, bbuId);
+          const mdccRow = $(`<tr class="mdcc-row"><td colspan="12" class="nested-section mdcc-section">${html}</td></tr>`);
+          $bbuRow.after(mdccRow);
+          $button.html('<i class="bi bi-journal-text"></i> Hide MDCC');
+          currentMdccContext = { projectId, bbuId, bbuSlNo, button };
+          bindMdccSectionEvents(mdccRow, projectId, bbuSlNo, bbuId);
+          applyQaAccessUI();
+        })
+        .catch(err => { console.error("Error:", err); Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load MDCC entries.' }); })
+        .finally(() => GlobalLoader.hide());
+    }
+
+    function extractPureInspectionText(rawRemarks) {
+      if (!rawRemarks) return '-';
+      let text = String(rawRemarks);
+      if (text.includes('---SIGNAME---')) {
+        text = text.split('---SIGNAME---')[0];
+      }
+      if (text.includes('---CONDITIONS---')) {
+        text = text.split('---CONDITIONS---')[0];
+      }
+      return text.trim() || '-';
+    }
+
+    function getMatchingMdccDisplayRows(allMdccs, bbu) {
+      const targetSlNo = String(bbu.bbu_sl_no || '').trim();
+      const targetItemSlNo = String(bbu.bbu_item_sl_no || '').trim();
+      const targetName = String(bbu.name_equipment || '').trim().toLowerCase();
+
+      const result = [];
+
+      allMdccs.forEach(m => {
+        let items = [];
+        if (m.mdcc_items) {
+          try { items = JSON.parse(m.mdcc_items); } catch(e) {}
+        }
+
+        const pureInspect = extractPureInspectionText(m.remarks);
+
+        if (Array.isArray(items) && items.length > 0) {
+          items.forEach((it, idx) => {
+            const itItemSlNo = String(it.bbu_item_sl_no || '').trim();
+            const itName = String(it.item_description || '').trim().toLowerCase();
+
+            if (!itName || itName === '--' || itName === 'select item/material description') {
+              return;
+            }
+
+            let isMatch = false;
+            if (targetItemSlNo && itItemSlNo === targetItemSlNo) isMatch = true;
+            else if (targetSlNo && itItemSlNo === targetSlNo) isMatch = true;
+            else if (targetName && itName === targetName) isMatch = true;
+            else if (String(m.bbu_sl_no || '').trim() === targetSlNo && (!itItemSlNo || itItemSlNo === targetSlNo)) isMatch = true;
+
+            if (isMatch) {
+              result.push({
+                mdcc_id: m.mdcc_id,
+                item_index: idx,
+                mdcc_date: m.mdcc_date,
+                mdcc_no: m.mdcc_no,
+                bbu_sl_no: m.bbu_sl_no,
+                bbu_item_sl_no: it.bbu_item_sl_no || m.bbu_item_sl_no || bbu.bbu_item_sl_no || bbu.bbu_sl_no,
+                item_material_description: it.item_description || m.item_material_description || bbu.name_equipment,
+                uom: it.uom || m.uom || bbu.uom,
+                qty_as_per_bbu: it.qty_as_per_bbu != null ? it.qty_as_per_bbu : bbu.quantity,
+                mdcc_issued_till_date: it.mdcc_issued_till_date != null ? it.mdcc_issued_till_date : 0,
+                mdcc_issued_for: it.mdcc_issued_for != null ? it.mdcc_issued_for : '',
+                manufacturer: it.manufacturer || m.manufacturer || '',
+                inspect: pureInspect,
+                inspected_by: m.inspected_by || '',
+                mandays: m.mandays || ''
+              });
+            }
+          });
+        } else {
+          // Single-row MDCC
+          const mItemSlNo = String(m.bbu_item_sl_no || '').trim();
+          const mSlNo = String(m.bbu_sl_no || '').trim();
+          const mName = String(m.item_material_description || '').trim().toLowerCase();
+
+          if (!mName || mName === '--' || mName === 'select item/material description') {
+            return;
+          }
+
+          let isMatch = false;
+          if (targetItemSlNo && (mItemSlNo === targetItemSlNo || mSlNo === targetItemSlNo)) isMatch = true;
+          else if (targetSlNo && (mSlNo === targetSlNo || mItemSlNo === targetSlNo)) isMatch = true;
+          else if (targetName && mName === targetName) isMatch = true;
+          else if (!targetItemSlNo && !targetName && mSlNo === targetSlNo) isMatch = true;
+
+          if (isMatch) {
+            result.push({
+              mdcc_id: m.mdcc_id,
+              item_index: 0,
+              mdcc_date: m.mdcc_date,
+              mdcc_no: m.mdcc_no,
+              bbu_sl_no: m.bbu_sl_no,
+              bbu_item_sl_no: m.bbu_item_sl_no || m.bbu_sl_no || bbu.bbu_item_sl_no || bbu.bbu_sl_no,
+              item_material_description: m.item_material_description || bbu.name_equipment,
+              uom: m.uom || bbu.uom,
+              qty_as_per_bbu: m.qty_as_per_bbu != null ? m.qty_as_per_bbu : bbu.quantity,
+              mdcc_issued_till_date: m.mdcc_issued_till_date != null ? m.mdcc_issued_till_date : 0,
+              mdcc_issued_for: m.mdcc_issued_for != null ? m.mdcc_issued_for : '',
+              manufacturer: m.manufacturer || '',
+              inspect: pureInspect,
+              inspected_by: m.inspected_by || '',
+              mandays: m.mandays || ''
+            });
+          }
+        }
+      });
+
+      return result;
+    }
+
+    function fetchMdcc(projectId) {
+      return authFetch(`/api/data/qa/project/${projectId}/mdcc/all`)
+        .then(res => res.json())
+        .then(resObj => { mdccCache[projectId] = resObj.data || []; });
+    }
+
+    function createMdccHtml(displayRows, projectId, bbuSlNo, bbuId) {
+      let rows = displayRows.map((m, index) => `
+        <tr data-mdcc-id="${m.mdcc_id}">
+          <td>${index + 1}</td>
+          <td><a href="/mdcc_form.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}&mdcc_id=${m.mdcc_id}" class="text-primary fw-bold text-decoration-none"><i class="bi bi-link-45deg"></i>${m.mdcc_date ? new Date(m.mdcc_date).toLocaleDateString('en-GB') : '-'}</a></td>
+          <td>${escapeHtml(m.mdcc_no || '-')}</td>
+          <td>${numOrDash(m.bbu_item_sl_no)}</td>
+          <td style="max-width: 150px; min-width: 130px; word-wrap: break-word; white-space: normal;">${escapeHtml(m.item_material_description || '-')}</td>
+          <td>${escapeHtml(m.uom || '-')}</td>
+          <td>${numOrDash(m.qty_as_per_bbu)}</td>
+          <td>${m.mdcc_issued_till_date != null ? m.mdcc_issued_till_date : 0}</td>
+          <td>${escapeHtml(m.mdcc_issued_for || '-')}</td>
+          <td style="max-width: 140px; min-width: 110px; word-wrap: break-word; white-space: normal;">${escapeHtml(m.manufacturer || '-')}</td>
+          <td style="max-width: 380px; min-width: 280px; word-wrap: break-word; white-space: normal;">${escapeHtml(m.inspect || '-')}</td>
+          <td>${escapeHtml(m.inspected_by || '-')}</td>
+          <td>${escapeHtml(m.mandays || '-')}</td>
+          <td>
+            <div class="btn-action-group">
+              <button class="btn btn-sm btn-info view-mdcc-btn" data-mdcc-id="${m.mdcc_id}" title="View"><i class="bi bi-eye"></i></button>
+              <button class="btn btn-sm btn-warning edit-mdcc-btn" data-mdcc-id="${m.mdcc_id}" title="Edit"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-danger delete-mdcc-btn" data-mdcc-id="${m.mdcc_id}" data-item-sl-no="${escapeHtml(m.bbu_item_sl_no || '')}" data-item-index="${m.item_index != null ? m.item_index : ''}" data-item-desc="${escapeHtml(m.item_material_description || '')}" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (!rows) {
+        rows = '<tr><td colspan="14" class="text-center text-muted py-3"><i class="bi bi-inbox me-2"></i>No MDCC entries for this BBU item.</td></tr>';
+      }
+
+      return `
+        <div>
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h6 class="mb-0">MDCC Details</h6>
+            <button class="btn btn-sm btn-success add-mdcc-btn" data-bbu-sl-no="${escapeHtml(bbuSlNo)}">
+              <i class="bi bi-plus-circle me-1"></i>Add MDCC
+            </button>
+          </div>
+          <div class="nested-table">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>MDCC DATE</th>
+                  <th>MDCC NO.</th>
+                  <th>BBU ITEM SL. NO.</th>
+                  <th style="max-width: 150px; min-width: 130px;">ITEM / MATERIAL DESCRIPTION</th>
+                  <th>UoM</th>
+                  <th>QTY (As Per BBU)</th>
+                  <th>MDCC Issued Till Date</th>
+                  <th>MDCC Issued For</th>
+                  <th style="max-width: 140px; min-width: 110px;">MANUFACTURER</th>
+                  <th style="max-width: 380px; min-width: 280px;">INSPECT</th>
+                  <th>Inspected By</th>
+                  <th>No. of ManDays</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindMdccSectionEvents($section, projectId, bbuSlNo, bbuId) {
+      $section.find('.add-mdcc-btn').on('click', function () {
+        window.location.href = `/mdcc_form.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}`;
+      });
+      $section.find('.view-mdcc-btn').on('click', function () {
+        const mdccId = $(this).data('mdcc-id');
+        window.location.href = `/mdcc_form.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}&mdcc_id=${mdccId}&mode=view`;
+      });
+      $section.find('.edit-mdcc-btn').on('click', function () {
+        const mdccId = $(this).data('mdcc-id');
+        window.location.href = `/mdcc_form.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}&mdcc_id=${mdccId}`;
+      });
+      $section.find('.delete-mdcc-btn').on('click', function () {
+        const mdccId = $(this).data('mdcc-id');
+        const itemSlNo = $(this).data('item-sl-no');
+        const itemIndex = $(this).data('item-index');
+        const itemDesc = $(this).data('item-desc');
+        deleteMdcc(mdccId, itemSlNo, itemIndex, itemDesc, projectId);
+      });
+    }
+
+    // ── Project add / edit / delete ────────────────────────────
+    function openProjectModal(project) {
+      editingProjectId = project ? project.qa_project_id : null;
+      $('#projectModalTitle').text(project ? 'Edit Project' : 'Register Project');
+      $('#p_project_name').val(project ? project.project_name : '');
+      $('#p_project_details').val(project ? project.project_details || '' : '');
+      $('#p_rfb_details').val(project ? project.rfb_details || '' : '');
+      $('#p_ca_no').val(project ? project.ca_no || '' : '');
+      $('#p_bbu_no').val(project ? project.bbu_no || '' : '');
+      $('#p_po_no').val(project ? project.po_no || '' : '');
+      $('#p_la_no').val(project ? project.loa_no || '' : '');
+      $('#p_contractor_name').val(project ? project.contractor_name || '' : '');
+      $('#p_contractor_address').val(project ? project.contractor_address || '' : '');
+      $('#p_mdcc_no').val(project ? project.mdcc_no || '' : '');
+      new bootstrap.Modal(document.getElementById('projectModal')).show();
+    }
+
+    function saveProjectModal() {
+      const name = $('#p_project_name').val().trim();
+      if (!name) { Swal.fire({ icon: 'warning', title: 'Validation', text: 'Project Name is required.' }); return; }
+      const data = {
+        project_name: name,
+        project_details: $('#p_project_details').val().trim(),
+        rfb_details: $('#p_rfb_details').val().trim(),
+        ca_no: $('#p_ca_no').val().trim(),
+        bbu_no: $('#p_bbu_no').val().trim(),
+        po_no: $('#p_po_no').val().trim(),
+        loa_no: $('#p_la_no').val().trim(),
+        contractor_name: $('#p_contractor_name').val().trim(),
+        contractor_address: $('#p_contractor_address').val().trim(),
+        mdcc_no: $('#p_mdcc_no').val().trim()
+      };
+      const url = editingProjectId ? `/api/data/qa/project/edit/${editingProjectId}` : "/api/data/qa/project/add";
+      const method = editingProjectId ? 'PUT' : 'POST';
+      authFetch(url, { method, body: JSON.stringify(data) })
+        .then(res => res.json())
+        .then(resObj => {
+          if (resObj.success) {
+            $('#projectModal').modal('hide');
+            Swal.fire('Success', resObj.message || 'Saved.', 'success');
+            fetchQaProjects();
+          } else throw new Error(resObj.message || 'Save failed');
+        })
+        .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to save project.' }));
+    }
+
+    function deleteProject(id) {
+      Swal.fire({ title: 'Are you sure?', text: 'Delete this project? Its BBU and MDCC entries will also be deleted.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e74c3c', confirmButtonText: 'Yes, delete!' })
+        .then(result => {
+          if (!result.isConfirmed) return;
+          authFetch(`/api/data/qa/project/delete/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(resObj => {
+              if (resObj.success) { Swal.fire('Deleted', 'Project deleted.', 'success'); fetchQaProjects(); }
+              else throw new Error(resObj.message || 'Delete failed');
+            })
+            .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to delete project.' }));
+        });
+    }
+
+    // ── Load project details from API ────────────────────────────
+    function loadProjectDetails(projectId) {
+      authFetch(`/api/data/qa/projects/all`)
+        .then((res) => res.json())
+        .then((resObj) => {
+          if (!resObj.success) return;
+          const project = (resObj.data || []).find(p => p.qa_project_id === projectId);
+          if (!project) return;
+          $('#projDetails').val(project.project_details || '');
+          $('#rfbDetails').val(project.rfb_details || '');
+          $('#caNo').val(project.ca_no || '');
+          $('#bbuRefNo').val(project.bbu_no || '');
+          $('#poNo').val(project.po_no || '');
+          $('#laNo').val(project.loa_no || '');
+          $('#contractorName').val(project.contractor_name || '');
+          $('#contractorAddress').val(project.contractor_address || '');
+          $('#mdccNo').val(project.mdcc_no || '');
+        })
+        .catch((err) => console.error('Error loading project details:', err));
+    }
+
+    // ── BBU add / edit / delete ────────────────────────────────
+    function openBbuModal(bbu) {
+      $('#bbuModalTitle').text(bbu ? 'Edit BBU Item' : 'Add BBU Item');
+      const nextSl = bbu ? bbu.bbu_sl_no : ((bbuCache[bbuModalProjectId] || []).length) + 1;
+      $('#b_bbu_sl_no').val(bbu ? bbu.bbu_sl_no : nextSl);
+      $('#b_name_equipment').val(bbu ? bbu.name_equipment : '');
+      $('#b_uom').val(bbu ? bbu.uom || '' : '');
+      $('#b_item_category').val(bbu ? bbu.item_category || '' : '');
+      $('#b_quantity').val(bbu ? bbu.quantity : '');
+      $('#b_unit_price').val(bbu ? bbu.unit_price : '');
+      $('#b_basic_price').val(bbu ? bbu.basic_price : '');
+      $('#b_gst_percent').val(bbu ? bbu.gst_percent || '' : '');
+      $('#b_gst').val(bbu ? bbu.gst : '');
+      $('#b_total_value').val(bbu ? bbu.total_value : '');
+      new bootstrap.Modal(document.getElementById('bbuModal')).show();
+    }
+
+    function saveBbuModal() {
+      const name = $('#b_name_equipment').val().trim();
+      if (!name) { Swal.fire({ icon: 'warning', title: 'Validation', text: 'Name / Equipment is required.' }); return; }
+      const data = {
+        bbu_sl_no: $('#b_bbu_sl_no').val() || null,
+        name_equipment: name,
+        uom: $('#b_uom').val().trim() || null,
+        item_category: $('#b_item_category').val().trim() || null,
+        quantity: $('#b_quantity').val() !== '' ? $('#b_quantity').val() : null,
+        unit_price: $('#b_unit_price').val() !== '' ? $('#b_unit_price').val() : null,
+        basic_price: $('#b_basic_price').val() !== '' ? $('#b_basic_price').val() : null,
+        gst_percent: $('#b_gst_percent').val().trim() || null,
+        gst: $('#b_gst').val() !== '' ? $('#b_gst').val() : null,
+        total_value: $('#b_total_value').val() !== '' ? $('#b_total_value').val() : null
+      };
+      const isEdit = editingBbuId !== null;
+      const url = isEdit ? `/api/data/qa/bbu/edit/${editingBbuId}` : `/api/data/qa/project/${bbuModalProjectId}/bbu/add`;
+      const method = isEdit ? 'PUT' : 'POST';
+      authFetch(url, { method, body: JSON.stringify(data) })
+        .then(res => res.json())
+        .then(resObj => {
+          if (resObj.success) {
+            $('#bbuModal').modal('hide');
+            Swal.fire('Success', resObj.message || 'Saved.', 'success');
+            refreshBbu(bbuModalProjectId);
+          } else throw new Error(resObj.message || 'Save failed');
+        })
+        .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to save BBU item.' }));
+    }
+
+    function deleteBbu(bbuId, projectId) {
+      Swal.fire({ title: 'Are you sure?', text: 'Delete this BBU item?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e74c3c', confirmButtonText: 'Yes, delete!' })
+        .then(result => {
+          if (!result.isConfirmed) return;
+          authFetch(`/api/data/qa/bbu/delete/${bbuId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(resObj => {
+              if (resObj.success) { Swal.fire('Deleted', 'BBU item deleted.', 'success'); refreshBbu(projectId); }
+              else throw new Error(resObj.message || 'Delete failed');
+            })
+            .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to delete BBU item.' }));
+        });
+    }
+
+    // ── MDCC add / edit / delete ───────────────────────────────
+    function openMdccModal(mdcc, bbuSlNo, bbuId) {
+      $('#mdccModalTitle').text(mdcc ? 'Edit MDCC Entry' : 'Add MDCC Entry');
+      if (mdcc) {
+        $('#m_mdcc_no').val(mdcc.mdcc_no || '');
+        $('#m_mdcc_date').val(mdcc.mdcc_date || '');
+        $('#m_bbu_sl_no').val(mdcc.bbu_sl_no != null ? mdcc.bbu_sl_no : bbuSlNo);
+        $('#m_bbu_item_sl_no').val(mdcc.bbu_item_sl_no != null ? mdcc.bbu_item_sl_no : (mdcc.bbu_sl_no != null ? mdcc.bbu_sl_no : bbuSlNo));
+        $('#m_uom').val(mdcc.uom || '');
+        $('#m_item_material_description').val(mdcc.item_material_description || '');
+        $('#m_qty_as_per_bbu').val(mdcc.qty_as_per_bbu != null ? mdcc.qty_as_per_bbu : '');
+        $('#m_mt').val(mdcc.mt || '');
+        $('#m_mdcc_issued_till_date').val(mdcc.mdcc_issued_till_date != null ? mdcc.mdcc_issued_till_date : 0);
+        $('#m_mdcc_issued_for').val(mdcc.mdcc_issued_for || '');
+        $('#m_manufacturer').val(mdcc.manufacturer || '');
+        $('#m_inspect').val(mdcc.inspect || '');
+        $('#m_remarks').val(mdcc.remarks || '');
+      } else {
+        $('#m_mdcc_no').val('');
+        $('#m_mdcc_date').val(new Date().toISOString().slice(0,10));
+        $('#m_bbu_sl_no').val(bbuSlNo);
+        $('#m_bbu_item_sl_no').val(bbuSlNo || '');
+        $('#m_uom').val('');
+        $('#m_item_material_description').val('');
+        $('#m_qty_as_per_bbu').val('');
+        $('#m_mt').val('');
+        $('#m_mdcc_issued_till_date').val(0);
+        $('#m_mdcc_issued_for').val('');
+        $('#m_manufacturer').val('');
+        $('#m_inspect').val('');
+        $('#m_remarks').val('');
+      }
+      $('#m_excel_file').val('');
+      $('#m_pdf_file').val('');
+      new bootstrap.Modal(document.getElementById('mdccModal')).show();
+    }
+
+    function saveMdccModal() {
+      const mdccNo = $('#m_mdcc_no').val().trim();
+      const mdccDate = $('#m_mdcc_date').val();
+      if (!mdccNo || !mdccDate) { Swal.fire({ icon: 'warning', title: 'Validation', text: 'MDCC No. and MDCC Date are required.' }); return; }
+
+      let inspectText = $('#m_inspect').val().trim() || '';
+      const isEdit = editingMdccId !== null;
+      const url = isEdit ? `/api/data/qa/mdcc/edit/${editingMdccId}` : `/api/data/qa/project/${mdccModalProjectId}/mdcc/add`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      // Collect the Inspect JSON field data, then attempt file uploads.
+      const data = {
+        mdcc_no: mdccNo,
+        mdcc_date: mdccDate,
+        bbu_sl_no: $('#m_bbu_sl_no').val() || null,
+        bbu_item_sl_no: $('#m_bbu_item_sl_no').val() || null,
+        item_material_description: $('#m_item_material_description').val().trim() || null,
+        uom: $('#m_uom').val().trim() || null,
+        mt: $('#m_mt').val().trim() || null,
+        qty_as_per_bbu: $('#m_qty_as_per_bbu').val() !== '' ? $('#m_qty_as_per_bbu').val() : null,
+        mdcc_issued_till_date: $('#m_mdcc_issued_till_date').val() !== '' ? $('#m_mdcc_issued_till_date').val() : 0,
+        mdcc_issued_for: $('#m_mdcc_issued_for').val().trim() || null,
+        manufacturer: $('#m_manufacturer').val().trim() || null,
+        remarks: $('#m_remarks').val().trim() || null
+      };
+
+      // Upload Inspect Excel + PDF files (if selected), then append references to inspectText.
+      const excelFile = $('#m_excel_file')[0].files[0];
+      const pdfFile = $('#m_pdf_file')[0].files[0];
+      const uploadInspect = (file) => {
+        if (!file) return Promise.resolve(null);
+        const form = new FormData();
+        form.append('inspect_file', file);
+        return uploadFetch('/api/data/documents/qa/mdcc/inspect/upload', form)
+          .then(r => {
+            if (r && r.success && r.data && r.data.url) return `${file.type || ''}##${r.data.url}##${r.data.original || file.name}`;
+            throw new Error((r && r.message) || 'Upload failed');
+          });
+      };
+
+      Promise.all([uploadInspect(excelFile), uploadInspect(pdfFile)])
+        .then(([excelRes, pdfRes]) => {
+          if (excelRes) inspectText += (inspectText ? ' | ' : '') + `Excel: <a href="${excelRes.split('##')[1]}" target="_blank">${excelRes.split('##')[2]}</a>`;
+          if (pdfRes) inspectText += (inspectText ? ' | ' : '') + `PDF: <a href="${pdfRes.split('##')[1]}" target="_blank">${pdfRes.split('##')[2]}</a>`;
+          data.inspect = inspectText;
+
+          authFetch(url, { method, body: JSON.stringify(data) })
+            .then(res => res.json())
+            .then(resObj => {
+              if (resObj.success) {
+                $('#mdccModal').modal('hide');
+                Swal.fire('Success', resObj.message || 'Saved.', 'success');
+                refreshMdcc(mdccModalProjectId);
+              } else throw new Error(resObj.message || 'Save failed');
+            })
+            .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to save MDCC entry.' }));
+        })
+        .catch(err => Swal.fire({ icon: 'error', title: 'Upload Error', text: err.message || 'Failed to upload Inspect files.' }));
+    }
+
+    function deleteMdcc(mdccId, itemSlNo, itemIndex, itemDesc, projectId) {
+      // If called with (mdccId, projectId) legacy signature
+      if (typeof itemSlNo === 'number' && projectId === undefined) {
+        projectId = itemSlNo;
+        itemSlNo = null;
+        itemIndex = null;
+        itemDesc = null;
+      }
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Delete this MDCC item entry?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        confirmButtonText: 'Yes, delete!'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+
+        const allMdccs = mdccCache[projectId] || [];
+        const mdcc = allMdccs.find(m => String(m.mdcc_id) === String(mdccId));
+
+        if (!mdcc) {
+          authFetch(`/api/data/qa/mdcc/delete/${mdccId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(resObj => {
+              if (resObj.success) { Swal.fire('Deleted', 'MDCC entry deleted.', 'success'); refreshMdcc(projectId); }
+              else throw new Error(resObj.message || 'Delete failed');
+            })
+            .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to delete MDCC entry.' }));
+          return;
+        }
+
+        let items = [];
+        if (mdcc.mdcc_items) {
+          try { items = JSON.parse(mdcc.mdcc_items); } catch(e) {}
+        }
+
+        if (Array.isArray(items) && items.length > 1) {
+          let updatedItems = [];
+          if (itemIndex != null && itemIndex !== '' && !isNaN(Number(itemIndex))) {
+            const idxNum = Number(itemIndex);
+            updatedItems = items.filter((_, i) => i !== idxNum);
+          } else {
+            const targetSl = String(itemSlNo || '').trim();
+            const targetDesc = String(itemDesc || '').trim().toLowerCase();
+            updatedItems = items.filter(it => {
+              const itSl = String(it.bbu_item_sl_no || '').trim();
+              const itDesc = String(it.item_description || '').trim().toLowerCase();
+              if (targetSl && itSl === targetSl) return false;
+              if (targetDesc && itDesc === targetDesc) return false;
+              return true;
+            });
+          }
+
+          if (updatedItems.length > 0) {
+            updatedItems.forEach((it, i) => { it.sl_no = i + 1; });
+            const firstItem = updatedItems[0];
+            const updatePayload = {
+              mdcc_no: mdcc.mdcc_no,
+              mdcc_date: mdcc.mdcc_date,
+              project_details: mdcc.project_details,
+              rfb_details: mdcc.rfb_details,
+              ca_no: mdcc.ca_no,
+              bbu_ref_no: mdcc.bbu_ref_no,
+              contractor_name: mdcc.contractor_name,
+              contractor_address: mdcc.contractor_address,
+              bbu_sl_no: mdcc.bbu_sl_no,
+              bbu_item_sl_no: firstItem.bbu_item_sl_no || null,
+              item_material_description: firstItem.item_description || null,
+              uom: firstItem.uom || null,
+              qty_as_per_bbu: firstItem.qty_as_per_bbu || null,
+              mdcc_issued_till_date: firstItem.mdcc_issued_till_date || 0,
+              mdcc_issued_for: firstItem.mdcc_issued_for || null,
+              manufacturer: firstItem.manufacturer || mdcc.manufacturer || null,
+              remarks: mdcc.remarks,
+              mdcc_items: JSON.stringify(updatedItems)
+            };
+
+            authFetch(`/api/data/qa/mdcc/edit/${mdccId}`, {
+              method: 'PUT',
+              body: JSON.stringify(updatePayload)
+            })
+              .then(res => res.json())
+              .then(resObj => {
+                if (resObj.success) {
+                  Swal.fire('Deleted', 'MDCC item deleted.', 'success');
+                  refreshMdcc(projectId);
+                } else throw new Error(resObj.message || 'Delete failed');
+              })
+              .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to update MDCC entry.' }));
+            return;
+          }
+        }
+
+        authFetch(`/api/data/qa/mdcc/delete/${mdccId}`, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(resObj => {
+            if (resObj.success) { Swal.fire('Deleted', 'MDCC entry deleted.', 'success'); refreshMdcc(projectId); }
+            else throw new Error(resObj.message || 'Delete failed');
+          })
+          .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to delete MDCC entry.' }));
+      });
+    }
+
+    // ── Excel upload ───────────────────────────────────────────
+    function handleUpload() {
+      const file = $('#bbuExcelFile')[0].files[0];
+      if (!file) { Swal.fire({ icon: 'warning', title: 'No file', text: 'Please choose an Excel file first.' }); return; }
+      const formData = new FormData();
+      formData.append('bbu_excel', file);
+      $('#uploadStatus').text('Uploading...');
+      uploadFetch(`/api/data/qa/project/${uploadProjectId}/bbu/upload`, formData)
+        .then(res => {
+          if (res && res.success) {
+            $('#uploadExcelModal').modal('hide');
+            Swal.fire('Uploaded', res.message || 'Excel uploaded.', 'success');
+            refreshBbu(uploadProjectId);
+          } else {
+            throw new Error((res && res.message) || 'Upload failed');
+          }
+        })
+        .catch(err => { $('#uploadStatus').text(''); Swal.fire({ icon: 'error', title: 'Upload Failed', text: err.message || 'Could not process the Excel file.' }); });
+    }
+
+    // ── Refresh helpers ────────────────────────────────────────
+    function closeAllMdccRows() {
+      $('.mdcc-row').remove();
+      $('.mdcc-toggle-btn').html('<i class="bi bi-journal-text"></i> MDCC');
+      currentMdccContext = null;
+    }
+
+    function closeNested() {
+      $('.bbu-row').remove();
+      $('.mdcc-row').remove();
+      $('.bbu-toggle-btn').html('BBU');
+      $('.mdcc-toggle-btn').html('<i class="bi bi-journal-text"></i> MDCC');
+      currentBbuContext = null;
+      currentMdccContext = null;
+    }
+
+    function refreshBbu(projectId) {
+      if (!currentBbuContext || currentBbuContext.projectId !== projectId) return;
+      const { button } = currentBbuContext;
+      closeNested();
+      toggleBbu(projectId, button);
+    }
+
+    function refreshMdcc(projectId) {
+      if (!currentMdccContext || currentMdccContext.projectId !== projectId) return;
+      const { bbuId, bbuSlNo, button } = currentMdccContext;
+      closeAllMdccRows();
+      toggleMdcc(projectId, bbuId, bbuSlNo, button);
+    }
+
+    // ── Export ─────────────────────────────────────────────────
+    async function exportAllProjectData() {
+      try {
+        GlobalLoader.show();
+        const projectsRes = await authFetch("/api/data/qa/projects/all").then(r => r.json());
+        const projects = (projectsRes.data || projectsRes) || [];
+
+        function parseRemarksData(rawRemarks) {
+          const defaultPoints = [
+            "Aforementioned item(s) are hereby cleared for dispatch to site, as per the terms & conditions of the RfB/CA cited.",
+            "Transhipment of consignment shall not be allowed.",
+            "This dispatch clearance and hold point/s (if any) however do not relieve the Contractor from any of the responsibilities mentioned in the RfB/CA including amendments, clarifications and addendums.",
+            "SECI keeps the right to inspect the material/s at site as well, as and when required."
+          ];
+
+          if (!rawRemarks) {
+            const addComments = defaultPoints.map(c => `# ${c}`).join('\n');
+            return { inspect: '', name: '', title: '', additionalComments: addComments };
+          }
+
+          let inspect = rawRemarks;
+          let name = '';
+          let title = '';
+          let userPoints = [];
+
+          if (rawRemarks.includes('---SIGNAME---')) {
+            const sigParts = rawRemarks.split('---SIGNAME---');
+            inspect = sigParts[0].trim();
+            const restParts = sigParts[1] ? sigParts[1].split('---CONDITIONS---') : [''];
+            const sigBlock = restParts[0].trim();
+            if (sigBlock.includes(' | ')) {
+              const sp = sigBlock.split(' | ');
+              name = sp[0].trim();
+              title = sp[1].trim();
+            } else {
+              name = sigBlock.trim();
+            }
+
+            if (restParts[1]) {
+              try {
+                userPoints = JSON.parse(restParts[1].trim());
+                if (!Array.isArray(userPoints)) userPoints = [];
+              } catch(e) {}
+            }
+          }
+
+          const allPoints = [...defaultPoints, ...userPoints];
+          const additionalComments = allPoints.map(c => `# ${c}`).join('\n');
+
+          return { inspect, name, title, additionalComments };
+        }
+
+        function esc(val) {
+          if (val == null) return '';
+          return String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        const headers = [
+          'Project Name', 'Project Details', 'RFB Details', 'CA No.', 'BBU No.',
+          'MDCC No', 'MDCC Date', 'BBU SL NO', 'BBU Item SL NO', 'Item Category',
+          'Item/Material Description', 'UoM', 'Qty As Per BBU',
+          'MDCC Issued Till Date', 'MDCC Issued For',
+          'Manufacturer', 'Inspect / Remarks', 'Inspected By', 'No. of ManDays',
+          'Name', 'Designation', 'Additional Comments'
+        ];
+
+        let tableRows = [];
+
+        for (const p of projects) {
+          const [bbuRes, mdccRes] = await Promise.all([
+            authFetch(`/api/data/qa/project/${p.qa_project_id}/bbu/all`).then(r => r.json()).catch(() => ({ data: [] })),
+            authFetch(`/api/data/qa/project/${p.qa_project_id}/mdcc/all`).then(r => r.json()).catch(() => ({ data: [] }))
+          ]);
+
+          const bbus = (bbuRes && bbuRes.data) || [];
+          const mdccs = (mdccRes && mdccRes.data) || [];
+
+          const bbuMap = {};
+          bbus.forEach(b => {
+            const k1 = String(b.bbu_item_sl_no || '').trim();
+            const k2 = String(b.bbu_sl_no || '').trim();
+            if (k1) bbuMap[k1] = b;
+            if (k2) bbuMap[k2] = b;
+          });
+
+          const pName = p.project_name || '';
+          const pDetails = p.project_details || '';
+          const pRfb = p.rfb_details || '';
+          const pCa = p.ca_no || '';
+          const pBbu = p.bbu_no || '';
+
+          if (mdccs.length > 0) {
+            const runningIssuedMap = {};
+
+            // Sort MDCC entries chronologically by date
+            mdccs.sort((a, b) => {
+              const dA = new Date(a.mdcc_date || 0).getTime();
+              const dB = new Date(b.mdcc_date || 0).getTime();
+              if (dA !== dB) return dA - dB;
+              return Number(a.mdcc_id || 0) - Number(b.mdcc_id || 0);
+            });
+
+            mdccs.forEach(m => {
+              const parsed = parseRemarksData(m.remarks);
+              let items = [];
+              if (m.mdcc_items) {
+                try { items = JSON.parse(m.mdcc_items); } catch(e) {}
+              }
+
+              if (Array.isArray(items) && items.length > 0) {
+                items.forEach(it => {
+                  const itemDesc = String(it.item_description || '').trim();
+                  if (!itemDesc || itemDesc === '--' || itemDesc.toLowerCase() === 'select item/material description') {
+                    return;
+                  }
+                  const itemSl = String(it.bbu_item_sl_no || '').trim();
+                  const itemKey = itemSl || itemDesc.toLowerCase();
+                  const matchedBbu = bbuMap[itemSl] || bbuMap[String(m.bbu_sl_no || '').trim()] || {};
+
+                  const currentTillDate = runningIssuedMap[itemKey] || 0;
+                  const currentIssuedFor = Number(it.mdcc_issued_for) || 0;
+                  runningIssuedMap[itemKey] = currentTillDate + currentIssuedFor;
+
+                  tableRows.push([
+                    pName,
+                    pDetails,
+                    pRfb,
+                    pCa,
+                    pBbu,
+                    m.mdcc_no || '',
+                    m.mdcc_date ? new Date(m.mdcc_date).toLocaleDateString('en-GB') : '',
+                    (m.bbu_sl_no || '').toString(),
+                    (it.bbu_item_sl_no || '').toString(),
+                    matchedBbu.item_category || '',
+                    it.item_description || '',
+                    it.uom || '',
+                    it.qty_as_per_bbu != null ? it.qty_as_per_bbu : '',
+                    currentTillDate,
+                    it.mdcc_issued_for || '',
+                    it.manufacturer || m.manufacturer || '',
+                    (parsed.inspect || '').replace(/\n/g, ' '),
+                    m.inspected_by || '',
+                    m.mandays || '',
+                    parsed.name || '',
+                    parsed.title || '',
+                    parsed.additionalComments || ''
+                  ]);
+                });
+              } else {
+                const itemDesc = String(m.item_material_description || '').trim();
+                if (!itemDesc || itemDesc === '--' || itemDesc.toLowerCase() === 'select item/material description') {
+                  return;
+                }
+                const itemSl = String(m.bbu_item_sl_no || m.bbu_sl_no || '').trim();
+                const itemKey = itemSl || itemDesc.toLowerCase();
+                const matchedBbu = bbuMap[itemSl] || {};
+
+                const currentTillDate = runningIssuedMap[itemKey] || 0;
+                const currentIssuedFor = Number(m.mdcc_issued_for) || 0;
+                runningIssuedMap[itemKey] = currentTillDate + currentIssuedFor;
+
+                tableRows.push([
+                  pName,
+                  pDetails,
+                  pRfb,
+                  pCa,
+                  pBbu,
+                  m.mdcc_no || '',
+                  m.mdcc_date ? new Date(m.mdcc_date).toLocaleDateString('en-GB') : '',
+                  (m.bbu_sl_no || '').toString(),
+                  (m.bbu_item_sl_no || '').toString(),
+                  matchedBbu.item_category || '',
+                  m.item_material_description || '',
+                  m.uom || '',
+                  m.qty_as_per_bbu != null ? m.qty_as_per_bbu : '',
+                  currentTillDate,
+                  m.mdcc_issued_for || '',
+                  m.manufacturer || '',
+                  (parsed.inspect || '').replace(/\n/g, ' '),
+                  m.inspected_by || '',
+                  m.mandays || '',
+                  parsed.name || '',
+                  parsed.title || '',
+                  parsed.additionalComments || ''
+                ]);
+              }
+            });
+          } else {
+            tableRows.push([
+              pName,
+              pDetails,
+              pRfb,
+              pCa,
+              pBbu,
+              '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+            ]);
+          }
+        }
+
+        let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>All_Projects_MDCC</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  td, th { mso-number-format:'\\@'; white-space: nowrap; padding: 4px 8px; vertical-align: top; }
+  th { background-color: #1a9e8f; color: #ffffff; font-weight: bold; font-size: 12pt; }
+  td { font-size: 11pt; }
+</style>
+</head><body>
+<table border="1" cellpadding="4" cellspacing="0">
+<thead><tr>`;
+
+        headers.forEach(h => { html += `<th>${esc(h)}</th>`; });
+        html += `</tr></thead><tbody>`;
+
+        tableRows.forEach(row => {
+          html += '<tr>';
+          row.forEach(cell => { html += `<td>${esc(cell).replace(/\n/g, '<br>')}</td>`; });
+          html += '</tr>';
+        });
+
+        html += `</tbody></table></body></html>`;
+
+        const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `All_Projects_MDCC_Export.xls`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      } catch (err) {
+        console.error('Export all error:', err);
+        Swal.fire({ icon: 'error', title: 'Export Failed', text: err.message || 'Failed to export all project data.' });
+      } finally {
+        GlobalLoader.hide();
+      }
+    }
+
+    function exportToCSV() {
+      if (!allProjects.length) return;
+      const headers = ['Project Name','Project Details','RFB Details','CA No.','Contractor Name','Contractor Address'];
+      const rows = allProjects.map(p => [p.project_name, p.project_details, p.rfb_details, p.ca_no, p.contractor_name, p.contractor_address]);
+      let csv = headers.join(',') + '\n';
+      rows.forEach(r => { csv += r.map(c => '"' + String(c || '').replace(/"/g,'""') + '"').join(',') + '\n'; });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'qa_projects_export.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+    // small alias to keep search filters consistent
+    $('#tableSearch').on('keyup', function () {
+      const value = this.value.toLowerCase();
+      $('#qaTable tbody tr[data-project-id]').each(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
+  </script>
+</body>
+</html>

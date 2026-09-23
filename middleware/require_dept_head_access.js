@@ -17,6 +17,7 @@ function getDeptNamesFromPath(pathname) {
   if (path.startsWith("/contracts/")) return ["Contracts & Procurement"];
   if (path.startsWith("/reia/")) return ["REIA"];
   if (path.startsWith("/om/")) return ["O&M"];
+  if (path.startsWith("/qa/")) return ["QA"];
   if (path.startsWith("/energy/")) return ["Energy Management", "Energy Mangement"];
   return [];
 }

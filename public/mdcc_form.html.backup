@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MDCC Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root {
+      --border-color: #000;
+    }
+    body {
+      background: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .a4-container {
+      width: 210mm;
+      min-height: 297mm;
+      background: white;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+      box-sizing: border-box;
+      padding-bottom: 35mm; /* Leave room for footer */
+    }
+    .header-img-container {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+    .header-img-container img {
+      width: 100%;
+      height: 130px;
+      object-fit: fill;
+      display: block;
+    }
+    .footer-img-container {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      margin-top: -100px;
+      border-top: 1px solid #ccc;
+    }
+    .footer-img-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .content-area {
+      padding: 0 12mm;
+    }
+    .mdcc-title {
+      text-align: center;
+      text-decoration: underline;
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    table, th, td {
+      border: 1px solid var(--border-color);
+    }
+    th, td {
+      padding: 4px 6px;
+      vertical-align: middle;
+      font-size: 12px;
+    }
+    th {
+      text-align: center;
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="number"], input[type="date"], textarea {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 2px 4px;
+    }
+    input:focus, textarea:focus {
+      outline: 1px solid #3498db;
+      background: #f0f8ff;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 40px;
+    }
+    #dynamic-points-list {
+      margin-top: 5px;
+      padding-left: 0;
+      list-style: none;
+    }
+    #dynamic-points-list li {
+      font-size: 11px;
+      font-weight: bold;
+      font-style: italic;
+      margin-bottom: 2px;
+      line-height: 1.5;
+    }
+    #f_to_address {
+      font-weight: bold;
+      font-style: italic;
+      font-size: 11px;
+      line-height: 1.4;
+      height: 115px !important;
+      resize: none;
+      overflow: hidden;
+      margin-top: 5px;
+      padding: 0;
+    }
+    
+    .table-top td {
+      padding: 4px 8px;
+    }
+    .table-top .label-col {
+      font-weight: bold;
+      width: 25%;
+    }
+    .table-top .to-col {
+      width: 45%;
+      vertical-align: top;
+    }
+    
+    @media print {
+      @page {
+        margin: 0;
+        size: A4;
+      }
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .a4-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        height: auto;
+        min-height: 297mm;
+        max-height: none;
+        overflow: visible;
+        position: relative;
+        box-sizing: border-box;
+      }
+      .d-print-none {
+        display: none !important;
+      }
+      input, textarea {
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+      }
+      #f_signature_name, #f_signature_title {
+        border: none !important;
+        border-bottom: none !important;
+      }
+      #f_signature_name::placeholder, #f_signature_title::placeholder {
+        color: transparent !important;
+      }
+      #f_signature_name:-ms-input-placeholder, #f_signature_title:-ms-input-placeholder {
+        color: transparent !important;
+      }
+      #f_signature_name::-ms-input-placeholder, #f_signature_title::-ms-input-placeholder {
+        color: transparent !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="a4-container">
+    <div class="header-img-container">
+      <img src="/icons/solar.jpeg" alt="SECI Header">
+    </div>
+
+    <div class="content-area">
+      <div class="mdcc-title">
+        MATERIAL DISPATCH CLEARANCE CERTIFICATE (MDCC)
+      </div>
+
+      <div class="top-row-container" style="display: flex; gap: 20px; align-items: stretch; margin-bottom: 8px;">
+        <div class="to-box-container" style="width: 200px; border: 1px solid var(--border-color); padding: 8px; display: flex; flex-direction: column; box-sizing: border-box;">
+          <strong>To,</strong>
+          <textarea id="f_to_address" placeholder="Enter recipient address..." style="height: 100%; flex-grow: 1; margin-top: 5px; resize: none; overflow: hidden; font-weight: bold; font-style: italic; font-size: 11px; line-height: 1.4; border: none; padding: 0;"></textarea>
+        </div>
+        
+        <table class="table-top" style="flex-grow: 1; margin-bottom: 0;">
+          <tr>
+            <td class="label-col">MDCC No.</td>
+            <td><input type="text" id="f_mdcc_no" /></td>
+          </tr>
+          <tr>
+            <td class="label-col">MDCC Date</td>
+            <td><input type="date" id="f_mdcc_date" /></td>
+          </tr>
+          <tr>
+            <td class="label-col">Project Details</td>
+            <td><textarea id="f_project_details" rows="2"></textarea></td>
+          </tr>
+          <tr>
+            <td class="label-col">RfB Details</td>
+            <td><input type="text" id="f_tender_no" /></td>
+          </tr>
+          <tr>
+            <td class="label-col">CA No.</td>
+            <td><input type="text" id="f_ca_no" /></td>
+          </tr>
+          <tr>
+            <td class="label-col">BBU Ref No.</td>
+            <td><input type="text" id="f_bbu_ref_no" /></td>
+          </tr>
+        </table>
+      </div>
+
+      <table class="table-bottom" id="mdcc-items-table">
+        <thead>
+          <tr>
+            <th rowspan="2" style="width: 4%">S. L.<br>NO.</th>
+            <th rowspan="2" style="width: 9%">BBU ITEM<br>SL. NO.</th>
+            <th rowspan="2" style="width: 17%">ITEM / MATERIAL<br>DESCRIPTION</th>
+            <th rowspan="2" style="width: 6%">U.O.M.</th>
+            <th colspan="3">QTY</th>
+            <th rowspan="2" style="width: 11%">MANUFACTURER</th>
+            <th rowspan="2" style="width: 22%">INSPECTION REPORT<br>NO. & OTHERS<br>WITH DATE</th>
+          </tr>
+          <tr>
+            <th style="width: 9%">As Per<br>BBU</th>
+            <th style="width: 12%">MDCC Issued<br>Till Date</th>
+            <th style="width: 10%">MDCC Issued<br>for</th>
+          </tr>
+        </thead>
+        <tbody id="mdcc-items-tbody">
+          <!-- Rows will be dynamically generated -->
+        </tbody>
+      </table>
+      <div class="d-print-none" style="margin-top: 6px; margin-bottom: 8px; text-align: left;">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddMdccRow">
+          <i class="bi bi-plus-circle"></i> Add Row
+        </button>
+        <span id="mdccRowCountLabel" style="margin-left: 10px; font-size: 11px; color: #6c757d;"></span>
+      </div>
+
+      <div style="font-size: 11px; margin-top: 15px; color: #000; line-height: 1.5;">
+        <div style="margin-bottom: 2px;"># Aforementioned item(s) are hereby <strong>cleared for dispatch to site</strong>, as per the terms & conditions of the RfB/CA cited.</div>
+        <div style="margin-bottom: 2px;"># Transhipment of consignment shall not be allowed.</div>
+        <div style="margin-bottom: 2px;"># This dispatch clearance and hold point/s (if any) however do not relieve the Contractor from any of the responsibilities mentioned in the RfB/CA including amendments, clarifications and addendums.</div>
+        <div style="margin-bottom: 2px;"># SECI keeps the right to inspect the material/s at site as well, as and when required.</div>
+        
+        <ul id="dynamic-points-list"></ul>
+
+        <div class="d-print-none" style="margin-top: 10px; display: flex; gap: 8px;">
+          <input type="text" id="new-point-input" placeholder="Add an additional point..." style="flex-grow: 1; border: 1px solid #ccc; padding: 2px 6px;">
+          <button type="button" class="btn btn-sm btn-secondary" id="btn-add-point">Add Point</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 8px; font-size: 11px; position: relative;">
+        <div style="text-align: right; font-weight: bold; margin-bottom: 2px;">
+          For and on behalf of SOLAR ENERGY CORPORATION OF INDIA LTD.
+        </div>
+        <!-- Space for stamp -->
+        <div style="height: 22px;"></div>
+        <!-- Signature Fields (Name and Designation combined in one line) -->
+        <div style="text-align: right; margin-top: 8px; margin-bottom: 5px;">
+          <span style="display: inline-block; width: 280px; border-bottom: 1px dashed #888; padding: 0 4px;">
+            <input type="text" id="f_signature_name" placeholder="Name" style="text-align: right; font-weight: bold; font-size: 11px; width: 130px; border: none; background: transparent; padding: 0; display: inline-block;" />
+            <span style="font-size: 11px;">(</span>
+            <input type="text" id="f_signature_title" placeholder="Designation" style="text-align: right; font-size: 11px; width: 130px; border: none; background: transparent; padding: 0; display: inline-block;" />
+            <span style="font-size: 11px;">)</span>
+          </span>
+        </div>
+      </div>
+
+
+    </div>
+
+    <div class="footer-img-container">
+      <img src="/icons/footer.jpeg" alt="SECI Footer">
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // Auth fetch wrapper
+    function authFetch(url, options = {}) {
+      const token = localStorage.getItem("token");
+      if (!token) { window.location.href = "/"; return Promise.reject("No token found"); }
+      const defaultHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+      return fetch(url, { ...options, headers: { ...defaultHeaders, ...(options.headers || {}) } })
+        .then((res) => {
+          if (res.status === 401) {
+            localStorage.clear(); window.location.href = "/"; throw new Error("Unauthorized");
+          }
+          return res;
+        });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project_id');
+    const bbuSlNo = urlParams.get('bbu_sl_no');
+    const bbuId = urlParams.get('bbu_id');
+    const mdccId = urlParams.get('mdcc_id');
+
+    // Global caches
+    window.bbuItemsCache = [];
+    window.allMdccData = [];
+
+    $(document).ready(function() {
+      // Set default date to today
+      const today = new Date().toISOString().slice(0, 10);
+      $('#f_mdcc_date').val(today);
+
+      $('#btnSaveCopy').on('click', saveMdcc);
+      $('#btnUploadInspection').on('click', goToUploadPage);
+      $('#btnAddMdccRow').on('click', function() { addMdccRow(); });
+
+      $('#btn-add-point').on('click', function() {
+        const val = $('#new-point-input').val().trim();
+        if (val) {
+          addPointToList(val);
+          $('#new-point-input').val('');
+        }
+      });
+
+      $('#new-point-input').on('keypress', function(e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          $('#btn-add-point').click();
+        }
+      });
+
+      if (projectId) {
+        loadAllData();
+      }
+    });
+
+    function addPointToList(val) {
+      const prefix = (val.startsWith('#') || val.startsWith('*')) ? '' : '# ';
+      const li = $('<li></li>').text(prefix + val);
+      const delBtn = $('<button class="btn btn-sm text-danger d-print-none ms-2" style="padding:0 2px;"><i class="bi bi-trash"></i></button>');
+      delBtn.on('click', function() {
+        $(this).parent().remove();
+      });
+      li.append(delBtn);
+      $('#dynamic-points-list').append(li);
+    }
+
+    async function loadAllData() {
+      try {
+        // 1. Fetch project details
+        const projRes = await authFetch('/api/data/qa/projects/all');
+        const projData = await projRes.json();
+        if (projData.success) {
+          const project = (projData.data || []).find(p => String(p.qa_project_id) === String(projectId));
+          if (project) {
+            $('#f_project_details').val(project.project_details || '');
+            $('#f_ca_no').val(project.ca_no || '');
+            $('#f_bbu_ref_no').val(project.bbu_no || '');
+            $('#f_tender_no').val(project.rfb_details || '');
+
+            const contractorInfo = [];
+            if (project.contractor_name) contractorInfo.push(project.contractor_name);
+            if (project.contractor_address) contractorInfo.push(project.contractor_address);
+            if (contractorInfo.length > 0) {
+              $('#f_to_address').val(contractorInfo.join('\n'));
+            }
+          }
+        }
+
+        // 2. Fetch all BBU items for dropdowns
+        const bbuRes = await authFetch(`/api/data/qa/project/${projectId}/bbu/all`);
+        const bbuData = await bbuRes.json();
+        if (bbuData.success) {
+          window.bbuItemsCache = bbuData.data || [];
+        }
+
+        // 3. Fetch all MDCC data (for "issued till date" calculation)
+        const mdccRes = await authFetch(`/api/data/qa/project/${projectId}/mdcc/all`);
+        const mdccData = await mdccRes.json();
+        if (mdccData.success) {
+          window.allMdccData = mdccData.data || [];
+        }
+
+        // 4. If editing, load existing MDCC and populate
+        if (mdccId) {
+          const mdcc = window.allMdccData.find(m => String(m.mdcc_id) === String(mdccId));
+          if (mdcc) {
+            $('#f_mdcc_no').val(mdcc.mdcc_no || '');
+            if (mdcc.mdcc_date) $('#f_mdcc_date').val(mdcc.mdcc_date);
+
+            // Parse remarks for inspection report, signature, conditions
+            const dbRemarks = mdcc.remarks || '';
+            let inspectionText = dbRemarks;
+            let sigName = '';
+            let sigTitle = '';
+
+            if (dbRemarks.includes('---SIGNAME---')) {
+              const sigParts = dbRemarks.split('---SIGNAME---');
+              inspectionText = sigParts[0].trim();
+              const restParts = sigParts[1].split('---CONDITIONS---');
+              const sigBlock = restParts[0].trim();
+              if (sigBlock.includes(' | ')) {
+                const sp = sigBlock.split(' | ');
+                sigName = sp[0];
+                sigTitle = sp[1];
+              } else {
+                sigName = sigBlock;
+              }
+              if (restParts[1]) {
+                try {
+                  const conditions = JSON.parse(restParts[1].trim());
+                  if (Array.isArray(conditions)) {
+                    conditions.forEach(c => addPointToList(c));
+                  }
+                } catch(e) {}
+              }
+            }
+            // Note: inspectionText is NOT prefilled for INSPECTION REPORT field
+            // Signature fields
+            $('#f_signature_name').val(sigName);
+            $('#f_signature_title').val(sigTitle);
+
+            // Uploaded files display
+            if (mdcc.uploaded_files) {
+              try {
+                const filesArr = JSON.parse(mdcc.uploaded_files);
+                if (Array.isArray(filesArr) && filesArr.length > 0) {
+                  const links = filesArr.map(f => `<a href="${f.path}" target="_blank">${f.original_name}</a>`).join(', ');
+                  $('#existing_uploaded_files').html(`Previously uploaded: ${links}`);
+                }
+              } catch(e) {}
+            }
+
+            // Inspection summary
+            if (mdcc.inspected_by || mdcc.mandays) {
+              let summary = '';
+              if (mdcc.inspected_by) summary += `Inspected by: <strong>${mdcc.inspected_by}</strong>`;
+              if (mdcc.mandays) summary += ` | ManDays: <strong>${mdcc.mandays}</strong>`;
+              $('#inspection_summary').html(summary);
+            }
+
+            // Load mdcc_items rows
+            if (mdcc.mdcc_items) {
+              try {
+                const items = JSON.parse(mdcc.mdcc_items);
+                if (Array.isArray(items) && items.length > 0) {
+                  items.forEach((item, idx) => {
+                    addMdccRow();
+                    const row = $('#mdcc-items-tbody tr').eq(idx);
+                    row.find('.bbu-item-sl-no-select').val(item.bbu_item_sl_no || '');
+                    row.find('.item-description-input').val(item.item_description || '');
+                    row.find('.uom-input').val(item.uom || '');
+                    row.find('.qty-as-per-bbu-input').val(item.qty_as_per_bbu || '');
+                    row.find('.qty-issued-till-date-input').val(item.mdcc_issued_till_date || '');
+                    row.find('.qty-issued-for-input').val(item.mdcc_issued_for || '');
+                  });
+                  // Set manufacturer and inspection (they span all rows)
+                  const lastItem = items[items.length - 1];
+                  if (lastItem.manufacturer) {
+                    $('#mdcc-items-tbody').find('.manufacturer-input').first().val(lastItem.manufacturer);
+                  }
+                  // Don't prefill inspection report
+                  updateRowLayout();
+                  updateAddButtonState();
+                  return; // Items loaded, done
+                }
+              } catch(e) { console.error('Error parsing mdcc_items:', e); }
+            }
+
+            // Fallback: if no mdcc_items, load from legacy single-row fields
+            if (mdcc.bbu_item_sl_no || mdcc.item_material_description) {
+              addMdccRow();
+              const row = $('#mdcc-items-tbody tr').eq(0);
+              row.find('.bbu-item-sl-no-select').val(mdcc.bbu_item_sl_no || '');
+              row.find('.item-description-input').val(mdcc.item_material_description || '');
+              row.find('.uom-input').val(mdcc.uom || '');
+              row.find('.qty-as-per-bbu-input').val(mdcc.qty_as_per_bbu || '');
+              row.find('.qty-issued-till-date-input').val(mdcc.mdcc_issued_till_date || '');
+              row.find('.qty-issued-for-input').val(mdcc.mdcc_issued_for || '');
+              if (mdcc.manufacturer) {
+                row.find('.manufacturer-input').val(mdcc.manufacturer);
+              }
+              updateRowLayout();
+              updateAddButtonState();
+              return;
+            }
+          }
+        }
+        
+        // Default: add one empty row
+        addMdccRow();
+        updateAddButtonState();
+
+      } catch(err) {
+        console.error("Error loading details:", err);
+        addMdccRow();
+        updateAddButtonState();
+      }
+    }
+
+    // ── Dynamic row management ──────────────────────────────────
+    function addMdccRow() {
+      const tbody = document.getElementById('mdcc-items-tbody');
+      const rowCount = tbody.rows.length;
+
+      if (rowCount >= 3) {
+        Swal.fire({ icon: 'warning', title: 'Maximum Rows', text: 'You can add a maximum of 3 rows.' });
+        return;
+      }
+
+      const bbuOptions = (window.bbuItemsCache || []).map(item => {
+        const val = item.bbu_item_sl_no || item.bbu_sl_no || '';
+        return `<option value="${val}">${val}</option>`;
+      }).join('');
+
+      const rowHtml = `
+        <tr class="mdcc-item-row" style="border-bottom: 2px solid #000;">
+          <td style="width:4%; text-align:center; vertical-align:top; padding-top:14px;">
+            <span class="sl-no-display">${rowCount + 1}</span>
+          </td>
+          <td style="width:9%; vertical-align:top; padding-top:10px;">
+            <select class="bbu-item-sl-no-select" style="width:100%; font-size:11px; border:none; background:transparent; padding:2px;">
+              <option value="">Select</option>
+              ${bbuOptions}
+            </select>
+          </td>
+          <td style="width:17%; vertical-align:top; padding-top:10px;">
+            <input type="text" class="item-description-input" style="font-size:11px; width:100%;" readonly>
+          </td>
+          <td style="width:6%; vertical-align:top; padding-top:10px; text-align:center;">
+            <input type="text" class="uom-input" style="font-size:11px; text-align:center; width:100%;" readonly>
+          </td>
+          <td style="width:9%; vertical-align:top; padding-top:10px; text-align:center;">
+            <input type="number" class="qty-as-per-bbu-input" style="font-size:11px; text-align:center; width:100%;" readonly>
+          </td>
+          <td style="width:12%; vertical-align:top; padding-top:10px; text-align:center;">
+            <input type="number" class="qty-issued-till-date-input" style="font-size:11px; text-align:center; width:100%;">
+          </td>
+          <td style="width:10%; vertical-align:top; padding-top:10px; text-align:center;">
+            <input type="number" class="qty-issued-for-input" style="font-size:11px; text-align:center; width:100%;">
+          </td>
+          <td style="width:11%; vertical-align:top; padding-top:10px;">
+            <textarea class="manufacturer-input" style="font-size:11px; height:220px; width:100%; resize:vertical;"></textarea>
+          </td>
+          <td style="width:22%; vertical-align:top; padding-top:10px;">
+            <textarea class="inspection-report-input" style="font-size:11px; height:220px; width:100%; resize:vertical; font-weight:bold;"></textarea>
+          </td>
+        </tr>
+      `;
+
+      $(tbody).append(rowHtml);
+
+      // Bind BBU dropdown change event
+      const newRow = tbody.rows[tbody.rows.length - 1];
+      $(newRow).find('.bbu-item-sl-no-select').on('change', function() {
+        handleBbuItemSelect(this);
+      });
+
+      updateRowLayout();
+      updateSlNumbers();
+      updateAddButtonState();
+    }
+
+    function handleBbuItemSelect(selectElement) {
+      const $row = $(selectElement).closest('tr');
+      const selectedValue = selectElement.value;
+
+      if (!selectedValue) {
+        $row.find('.item-description-input').val('');
+        $row.find('.uom-input').val('');
+        $row.find('.qty-as-per-bbu-input').val('');
+        $row.find('.qty-issued-till-date-input').val('');
+        $row.find('.qty-issued-for-input').val('');
+        return;
+      }
+
+      const bbuItem = (window.bbuItemsCache || []).find(item =>
+        (item.bbu_item_sl_no || item.bbu_sl_no) == selectedValue
+      );
+
+      if (bbuItem) {
+        $row.find('.item-description-input').val(bbuItem.name_equipment || '');
+        $row.find('.uom-input').val(bbuItem.uom || '');
+        $row.find('.qty-as-per-bbu-input').val(bbuItem.quantity || '');
+
+        // Calculate MDCC issued till date: sum of all previous MDCCs for the same BBU item
+        const bbuItemKey = bbuItem.bbu_item_sl_no || bbuItem.bbu_sl_no;
+        let sumIssued = 0;
+        (window.allMdccData || []).forEach(m => {
+          if (String(m.mdcc_id) === String(mdccId)) return; // skip current MDCC
+          // Check legacy single-row
+          if (m.bbu_item_sl_no == bbuItemKey && m.mdcc_issued_for) {
+            sumIssued += Number(m.mdcc_issued_for) || 0;
+          }
+          // Check multi-row items
+          if (m.mdcc_items) {
+            try {
+              const items = JSON.parse(m.mdcc_items);
+              if (Array.isArray(items)) {
+                items.forEach(it => {
+                  if (it.bbu_item_sl_no == bbuItemKey && it.mdcc_issued_for) {
+                    sumIssued += Number(it.mdcc_issued_for) || 0;
+                  }
+                });
+              }
+            } catch(e) {}
+          }
+        });
+
+        $row.find('.qty-issued-till-date-input').val(sumIssued);
+        const qtyBbu = Number(bbuItem.quantity || 0);
+        const remaining = Math.max(0, qtyBbu - sumIssued);
+        $row.find('.qty-issued-for-input').val(remaining);
+      }
+    }
+
+    function updateSlNumbers() {
+      $('#mdcc-items-tbody tr.mdcc-item-row').each(function(i) {
+        $(this).find('.sl-no-display').text(i + 1);
+      });
+    }
+
+    function updateAddButtonState() {
+      const rowCount = $('#mdcc-items-tbody tr.mdcc-item-row').length;
+      if (rowCount >= 3) {
+        $('#btnAddMdccRow').hide();
+      } else {
+        $('#btnAddMdccRow').show();
+      }
+      $('#mdccRowCountLabel').text(`${rowCount} / 3 rows`);
+    }
+
+    // Merge MANUFACTURER and INSPECTION REPORT cells across rows using rowspan
+    function updateRowLayout() {
+      const rows = $('#mdcc-items-tbody tr.mdcc-item-row');
+      const rowCount = rows.length;
+
+      if (rowCount <= 1) {
+        // Single row: manufacturer and inspection report belong to that row
+        return;
+      }
+
+      // For multi-row: the FIRST row's manufacturer and inspection report cells
+      // get rowspan = rowCount, and subsequent rows' cells are removed
+      const firstRow = rows.eq(0);
+      const firstMfr = firstRow.find('.manufacturer-input').closest('td');
+      const firstInsp = firstRow.find('.inspection-report-input').closest('td');
+
+      // Collect existing values before restructuring
+      let mfrVal = '';
+      let inspVal = '';
+      rows.each(function(i) {
+        const mfr = $(this).find('.manufacturer-input').val();
+        const insp = $(this).find('.inspection-report-input').val();
+        if (mfr && !mfrVal) mfrVal = mfr;
+        if (insp && !inspVal) inspVal = insp;
+      });
+
+      // Remove manufacturer and inspection cells from rows 2+
+      rows.each(function(i) {
+        if (i === 0) return;
+        const cells = $(this).find('td');
+        // Manufacturer is 8th cell (index 7), Inspection is 9th (index 8)
+        // But if already removed, don't try again
+        const mfrCell = $(this).find('.manufacturer-input').closest('td');
+        const inspCell = $(this).find('.inspection-report-input').closest('td');
+        if (mfrCell.length) mfrCell.remove();
+        if (inspCell.length) inspCell.remove();
+      });
+
+      // Set rowspan on first row's cells
+      firstMfr.attr('rowspan', rowCount);
+      firstInsp.attr('rowspan', rowCount);
+
+      // Restore values
+      if (mfrVal) firstRow.find('.manufacturer-input').val(mfrVal);
+      // Never prefill inspection report
+    }
+
+    // ── Save ────────────────────────────────────────────────────
+    async function saveMdcc() {
+      const mdccNo = $('#f_mdcc_no').val().trim();
+      const mdccDate = $('#f_mdcc_date').val();
+
+      if (!mdccNo || !mdccDate) {
+        Swal.fire({ icon: 'warning', title: 'Validation', text: 'MDCC No. and MDCC Date are required.' });
+        return;
+      }
+
+      // Collect item rows
+      const mdccItems = [];
+      const manufacturer = $('#mdcc-items-tbody .manufacturer-input').first().val().trim();
+      const inspectionReport = $('#mdcc-items-tbody .inspection-report-input').first().val().trim();
+
+      $('#mdcc-items-tbody tr.mdcc-item-row').each(function(i) {
+        const $row = $(this);
+        mdccItems.push({
+          sl_no: i + 1,
+          bbu_item_sl_no: $row.find('.bbu-item-sl-no-select').val() || '',
+          item_description: $row.find('.item-description-input').val() || '',
+          uom: $row.find('.uom-input').val() || '',
+          qty_as_per_bbu: $row.find('.qty-as-per-bbu-input').val() || '',
+          mdcc_issued_till_date: $row.find('.qty-issued-till-date-input').val() || '',
+          mdcc_issued_for: $row.find('.qty-issued-for-input').val() || '',
+          manufacturer: manufacturer,
+        });
+      });
+
+      if (mdccItems.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please add at least one BBU item row.' });
+        return;
+      }
+
+      // Collect additional points
+      const additionalPoints = [];
+      $('#dynamic-points-list li').each(function() {
+        const text = $(this).clone().find('.d-print-none').remove().end().text().trim();
+        if (text) additionalPoints.push(text);
+      });
+
+      Swal.fire({ title: 'Saving MDCC...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      // Build remarks from inspection report, signature, and conditions
+      const sigName = $('#f_signature_name').val().trim();
+      const sigTitle = $('#f_signature_title').val().trim();
+      const sigFull = sigName + (sigTitle ? ' | ' + sigTitle : '');
+      let combinedRemarks = inspectionReport;
+      if (sigFull || additionalPoints.length > 0) {
+        combinedRemarks += '\n---SIGNAME---\n' + sigFull + '\n---CONDITIONS---\n' + JSON.stringify(additionalPoints);
+      }
+
+      const isEdit = !!mdccId;
+      const url = isEdit ? `/api/data/qa/mdcc/edit/${mdccId}` : `/api/data/qa/project/${projectId}/mdcc/add`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      // Use first row's data for legacy single-row fields (backward compatibility)
+      const firstItem = mdccItems[0];
+
+      const data = {
+        mdcc_no: mdccNo,
+        mdcc_date: mdccDate,
+        project_details: $('#f_project_details').val().trim() || null,
+        rfb_details: $('#f_tender_no').val().trim() || null,
+        ca_no: $('#f_ca_no').val().trim() || null,
+        bbu_ref_no: $('#f_bbu_ref_no').val().trim() || null,
+        contractor_name: $('#f_to_address').val().split('\n')[0] || null,
+        contractor_address: $('#f_to_address').val().split('\n').slice(1).join('\n') || null,
+        bbu_sl_no: bbuSlNo || null,
+        bbu_item_sl_no: firstItem.bbu_item_sl_no || null,
+        item_material_description: firstItem.item_description || null,
+        uom: firstItem.uom || null,
+        qty_as_per_bbu: firstItem.qty_as_per_bbu || null,
+        mdcc_issued_till_date: firstItem.mdcc_issued_till_date || 0,
+        mdcc_issued_for: firstItem.mdcc_issued_for || null,
+        manufacturer: manufacturer || null,
+        remarks: combinedRemarks || null,
+        mdcc_items: JSON.stringify(mdccItems),
+      };
+
+      authFetch(url, { method, body: JSON.stringify(data) })
+        .then(res => res.json())
+        .then(resObj => {
+          if (resObj.success) {
+            const newMdccId = resObj.data ? resObj.data.mdcc_id : mdccId;
+            Swal.fire({
+              icon: 'success',
+              title: 'MDCC Saved',
+              text: resObj.message || 'MDCC saved successfully. You can now upload documents and inspection details.',
+              confirmButtonText: 'Continue to Upload Documents'
+            }).then(() => {
+              const uploadUrl = `/mdcc_upload.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}&mdcc_id=${newMdccId}`;
+              window.location.href = uploadUrl;
+            });
+          } else {
+            throw new Error(resObj.message || 'Save failed');
+          }
+        })
+        .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to save MDCC entry.' }));
+    }
+
+    // Navigate to upload page for the current MDCC
+    function goToUploadPage() {
+      if (!mdccId) {
+        return Swal.fire({
+          icon: 'info',
+          title: 'Save First',
+          text: 'Please save the MDCC form first, then you can upload documents and inspection details.'
+        });
+      }
+      
+      const uploadUrl = `/mdcc_upload.html?project_id=${projectId}&bbu_sl_no=${bbuSlNo}&bbu_id=${bbuId}&mdcc_id=${mdccId}`;
+      window.location.href = uploadUrl;
+    }
+  </script>
+</body>
+</html>
